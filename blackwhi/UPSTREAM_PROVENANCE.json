@@ -1,0 +1,22 @@
+{
+  "contract": "blackwhi.store.fork.provenance.v1",
+  "foundationVersion": "v0.1.0",
+  "upstreamUrl": "https://github.com/eclipse-openvsx/openvsx.git",
+  "upstreamBranch": "main",
+  "upstreamCommit": "1f4a598981ac678f1397543a92b1a3d9693cb0a5",
+  "sourceCodeLicense": "EPL-2.0",
+  "upstreamFileHashes": {
+    "LICENSE": "8c349f80764d0648e645f41ef23772a70c995a0924b5235f735f4a3d09df127c",
+    "NOTICE.md": "9e1451b8bf89d000d9ac3b0f8b3e8525224435ce3f59f6679ce7e6987dc033bb"
+  },
+  "blackwhiV2ContractSha256": {
+    "apps/api/src/fit-registry/fit-registry.controller.ts": "010f93ceab123edb61db4581edc6a1aa4eaa3fed1c9d3cf2242d4ccaacd126c4",
+    "apps/api/src/fit-registry/fit-registry.service.ts": "4d8369674cfa4ebf1e97fa00d15bcc68a5219dad938e63186628b88975928e90",
+    "apps/api/src/fit-registry/fit-registry-identity.service.ts": "69b444dc1ce61fe7cc4e84e22b09f754b9cc6e5a52c2bff1d069f446a26ded72",
+    "apps/api/src/fit-registry/fit-registry-writer.service.ts": "ea68b1df2062fc852d56e0e122da44fb80946cc03169c13e4d7cebdeb0d28526",
+    "apps/cli/src/fit-secure.ts": "3da2f0a771c19bfddc53901608d2d5ed6cb6aa4cb7bc2cd52a3ae1653a46163e",
+    "docs/architecture/fit/implementations/v0.5.13/CONTRACT_EN.md": "1f474df8ee519b71408235d3ac4bca82b391e3363295090707481df8eac18666"
+  },
+  "createdUtc": "2026-11-06T13:32:07.379654+00:00",
+  "integrationState": "design-only; no FIT publishing/runtime integration"
+}

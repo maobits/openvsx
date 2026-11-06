@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.blackwhi.com/store/v1/registry-release-ref.schema.json",
+  "title": "BlackWhi Registry Release Reference v1 (Store projection only)",
+  "description": "An informational pointer. It does not confer permission to install or execute FIT.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "packageId",
+    "version",
+    "sha256",
+    "state"
+  ],
+  "properties": {
+    "contract": {
+      "const": "blackwhi.fit.registry.catalog.v1"
+    },
+    "packageId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9.-]{1,120}$",
+      "maxLength": 121
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]{1,8}\\.[0-9]{1,8}\\.[0-9]{1,8}(?:-[0-9A-Za-z.-]{1,40})?$",
+      "maxLength": 70
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "state": {
+      "enum": [
+        "published",
+        "deprecated"
+      ]
+    },
+    "publishedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

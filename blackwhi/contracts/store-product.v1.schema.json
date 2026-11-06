@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.blackwhi.com/store/v1/store-product.schema.json",
+  "title": "BlackWhi Store Product v1 (proposed catalog projection)",
+  "description": "Catalog metadata only. Not proof of trust, not a package manifest or install authorization.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "productId",
+    "artifactType",
+    "displayName",
+    "publisherNamespace",
+    "registryRelease"
+  ],
+  "properties": {
+    "contract": {
+      "const": "blackwhi.store.catalog.product.v1"
+    },
+    "productId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9.-]{1,120}$"
+    },
+    "artifactType": {
+      "const": "fit-package"
+    },
+    "displayName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160
+    },
+    "publisherNamespace": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9.-]{1,120}$"
+    },
+    "summary": {
+      "type": "string",
+      "maxLength": 500
+    },
+    "categories": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 12,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 48
+      }
+    },
+    "registryRelease": {
+      "$ref": "./registry-release-ref.v1.schema.json"
+    }
+  }
+}
