@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blackwhi.dev/contracts/store-service-proof.v1.schema.json",
+  "title": "BlackWhi Store service proof — proposal, offline boundary v1",
+  "description": "Signed Ed25519 service assertion. This is NOT an active NestJS authentication contract or public HTTP endpoint.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract", "keyId", "subject", "audience", "method", "path", "permission",
+    "bodySha256", "issuedAtEpochSec", "expiresAtEpochSec", "nonce", "signature"
+  ],
+  "properties": {
+    "contract": {"const": "blackwhi.store.service-proof.v1"},
+    "keyId": {"type": "string", "pattern": "^[a-z][a-z0-9._-]{2,63}$"},
+    "subject": {"const": "service.store.catalog"},
+    "audience": {"const": "blackwhi-store"},
+    "method": {"const": "GET"},
+    "path": {"const": "/fit-registry/v1/catalog"},
+    "permission": {"const": "fit.registry.catalog.read"},
+    "bodySha256": {"const": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+    "issuedAtEpochSec": {"type": "integer", "minimum": 1},
+    "expiresAtEpochSec": {"type": "integer", "minimum": 2},
+    "nonce": {"type": "string", "pattern": "^[A-Za-z0-9_-]{22}$"},
+    "signature": {"type": "string", "pattern": "^[A-Za-z0-9_-]{86}$"}
+  }
+}
