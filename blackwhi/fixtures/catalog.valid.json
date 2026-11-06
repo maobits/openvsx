@@ -1,0 +1,14 @@
+{
+  "contract": "blackwhi.fit.registry.catalog.v1",
+  "readOnly": true,
+  "releases": [
+    {
+      "id": "org.blackwhi.examples.strength",
+      "version": "1.0.0",
+      "title": "Strength Calculator",
+      "state": "published",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "publishedAt": "2026-11-06T12:00:00.000Z"
+    }
+  ]
+}

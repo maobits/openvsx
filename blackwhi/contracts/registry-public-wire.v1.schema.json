@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.blackwhi.com/store/v1/registry-public-wire.schema.json",
+  "title": "BlackWhi FIT Registry Public Catalog Wire Contract v1",
+  "description": "Read-only HTTP GET /fit-registry/v1/catalog. This is a public metadata response, NOT permission to install or execute code.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "releases", "readOnly"],
+  "properties": {
+    "contract": {"const": "blackwhi.fit.registry.catalog.v1"},
+    "readOnly": {"const": true},
+    "releases": {
+      "type": "array", "maxItems": 50,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "version", "title", "state", "sha256", "publishedAt"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z][a-z0-9.-]{1,120}$"},
+          "version": {"type": "string", "pattern": "^[0-9]{1,8}\\.[0-9]{1,8}\\.[0-9]{1,8}(?:-[0-9A-Za-z.-]{1,40})?$"},
+          "title": {"type": "string", "minLength": 1, "maxLength": 160},
+          "state": {"enum": ["published", "deprecated"]},
+          "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "publishedAt": {"type": "string", "format": "date-time"}
+        }
+      }
+    }
+  }
+}
