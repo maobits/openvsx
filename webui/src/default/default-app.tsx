@@ -58,6 +58,7 @@ export const App = () => {
 
 const node = document.getElementById('main') as HTMLElement;
 const root = createRoot(node);
+// A single Open VSX app. FIT is rendered inside its native home/search/detail routes.
 root.render(
     <BrowserRouter>
         <App />

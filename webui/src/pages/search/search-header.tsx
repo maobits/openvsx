@@ -15,6 +15,7 @@ import { FunctionComponent } from 'react';
 import { Box, IconButton, Select, MenuItem, Typography, SelectChangeEvent } from '@mui/material';
 import { SortBy, SortOrder } from '../../extension-registry-types';
 import { ExtensionCategory } from '../../extension-registry-types';
+import { FIT_CATEGORY } from '../../blackwhi/fit/native-fit-catalog';
 import { Theme } from '@mui/material/styles';
 import { compactControl } from '../../components/page-primitives';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
@@ -70,7 +71,7 @@ export const SearchHeader: FunctionComponent<SearchHeaderProps> = props => {
                     {title}
                 </Typography>
                 <Typography sx={{ fontSize: '0.8125rem', color: 'text.disabled', mt: '0.3125rem' }}>
-                    {props.resultNumber.toLocaleString()} extensions found
+                    {props.resultNumber.toLocaleString()} {props.nativeFitEnabled ? 'catalog results (FIT coverage: latest 50 releases)' : 'extensions found'}
                 </Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flexShrink: 0, mt: '0.375rem' }}>
@@ -117,5 +118,6 @@ export interface SearchHeaderProps {
     sortOrder: SortOrder;
     resultNumber: number;
     searchQuery?: string;
-    category?: ExtensionCategory | '';
+    category?: ExtensionCategory | typeof FIT_CATEGORY | '';
+    nativeFitEnabled?: boolean;
 }

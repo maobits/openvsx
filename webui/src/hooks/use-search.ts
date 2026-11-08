@@ -14,10 +14,11 @@
 import { createContext, useContext, useMemo } from 'react';
 import { useSearchParams } from 'react-router';
 import { ExtensionCategory, SortBy, SortOrder } from '../extension-registry-types';
+import { FIT_CATEGORY } from '../blackwhi/fit/native-fit-catalog';
 
 export interface SearchFilter {
     query: string;
-    category: (ExtensionCategory | '') & string;
+    category: ExtensionCategory | typeof FIT_CATEGORY | '';
     sortBy: SortBy;
     sortOrder: SortOrder;
 }
@@ -28,7 +29,7 @@ export const SEARCH_DEBOUNCE_MS = 150;
 export function filterFromParams(searchParams: URLSearchParams): SearchFilter {
     return {
         query: searchParams.get('q') ?? '',
-        category: (searchParams.get('category') as ExtensionCategory) ?? '',
+        category: (searchParams.get('category') as SearchFilter['category']) ?? '',
         sortBy: (searchParams.get('sortBy') as SortBy) ?? 'relevance',
         sortOrder: (searchParams.get('sortOrder') as SortOrder) ?? 'desc'
     };

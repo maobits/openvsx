@@ -20,6 +20,8 @@ import StarIcon from '@mui/icons-material/Star';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import { ExtensionDetailRoutes } from '../pages/extension-detail/extension-detail-routes';
 import { Extension, SearchEntry } from '../extension-registry-types';
+import { FitStoreProduct } from '../blackwhi/fit/live-catalog';
+import { TagChip } from './page-primitives';
 import { ExtensionIcon } from './extension/extension-icon';
 import { createRoute, formatCompactNumber, formatRating } from '../utils';
 import { MONO_FONT } from '../default/theme';
@@ -154,6 +156,8 @@ export interface ExtensionCardProps extends Partial<Omit<GridItemProps, 'ref'>> 
      * across the swap so the fade plays once instead of restarting.
      */
     extension?: Extension | SearchEntry;
+    /** Separate catalog type; never issue VSIX API calls for an FIT artifact. */
+    fitProduct?: FitStoreProduct;
     /** Delay before the card fades in, so grids can stagger their cards. */
     fadeDelayMs?: number;
     /** When false, the card shows immediately without its entrance fade (e.g. restored from cache on back-nav). */
@@ -178,6 +182,7 @@ export const ExtensionCard = memo(
     forwardRef<HTMLAnchorElement, ExtensionCardProps>(function ExtensionCard(
         {
             extension,
+            fitProduct,
             fadeDelayMs = 0,
             appear = true,
             to,
@@ -191,7 +196,8 @@ export const ExtensionCard = memo(
         },
         ref
     ) {
-        const title = extension?.displayName ?? extension?.name;
+        const title = fitProduct?.displayName ?? extension?.displayName ?? extension?.name;
+        const deprecated = fitProduct?.registryRelease.state === 'deprecated' || !!extension?.deprecated;
         const downloadCount = extension ? formatCompactNumber(extension.downloadCount ?? 0) : undefined;
         const reviewCount = extension?.reviewCount ?? 0;
 
@@ -199,18 +205,19 @@ export const ExtensionCard = memo(
         return (
             <Fade in appear={appear} timeout={{ enter: fadeDelayMs }}>
                 <Box title={title} sx={{ height: '100%' }}>
-                    {extension ? (
+                    {extension || fitProduct ? (
                         <RouteLink
                             ref={ref}
                             {...linkProps}
-                            to={to ?? createRoute([ExtensionDetailRoutes.ROOT, extension.namespace, extension.name])}
+                            to={to ?? (fitProduct ? `/fit-package/${encodeURIComponent(fitProduct.productId)}` :
+                                createRoute([ExtensionDetailRoutes.ROOT, extension!.namespace, extension!.name]))}
                             state={linkState}
                             aria-label={title}
                             style={{ textDecoration: 'none', height: '100%', display: 'block', outline: 'none' }}>
                             <CardRoot
                                 elevation={0}
                                 sx={[
-                                    (extension.deprecated || dimmed) === true && {
+                                    (deprecated || dimmed) === true && {
                                         opacity: 0.5,
                                         filter: 'grayscale(100%)'
                                     },
@@ -242,12 +249,18 @@ export const ExtensionCard = memo(
                                         height: 54,
                                         mb: '0.75rem'
                                     }}>
-                                    <ExtensionIcon
-                                        extension={extension}
-                                        alt={title}
-                                        pending={iconPending}
-                                        sx={{ width: 54, maxHeight: 54, objectFit: 'contain' }}
-                                    />
+                                    {fitProduct ? (
+                                        <Box component='span' role='img' aria-label='FIT package' sx={{
+                                            fontWeight: 800, fontSize: '1.35rem', color: 'secondary.main'
+                                        }}>FIT</Box>
+                                    ) : (
+                                        <ExtensionIcon
+                                            extension={extension!}
+                                            alt={title}
+                                            pending={iconPending}
+                                            sx={{ width: 54, maxHeight: 54, objectFit: 'contain' }}
+                                        />
+                                    )}
                                 </Box>
                                 <Typography
                                     noWrap
@@ -273,7 +286,7 @@ export const ExtensionCard = memo(
                                         WebkitBoxOrient: 'vertical',
                                         overflow: 'hidden'
                                     }}>
-                                    {extension.description}
+                                    {fitProduct ? 'FIT package · public Registry release' : extension?.description}
                                 </Typography>
                                 <Box
                                     sx={{
@@ -316,9 +329,9 @@ export const ExtensionCard = memo(
                                                 minWidth: 0,
                                                 textAlign: 'left'
                                             }}>
-                                            {extension.namespace}
+                                            {fitProduct?.publisherNamespace ?? extension?.namespace}
                                         </Typography>
-                                        {extension.verified && (
+                                        {!fitProduct && extension?.verified && (
                                             <Box
                                                 component='span'
                                                 title='Verified publisher'
@@ -336,7 +349,7 @@ export const ExtensionCard = memo(
                                     </Box>
                                     <Typography
                                         component='div'
-                                        title={extension.version}
+                                        title={fitProduct?.registryRelease.version ?? extension?.version}
                                         sx={{
                                             fontSize: '0.6875rem',
                                             color: 'text.disabled',
@@ -350,10 +363,10 @@ export const ExtensionCard = memo(
                                             overflow: 'hidden',
                                             textOverflow: 'ellipsis'
                                         }}>
-                                        {extension.version}
+                                        {fitProduct?.registryRelease.version ?? extension?.version}
                                     </Typography>
                                 </Box>
-                                {extension.deprecated && (
+                                {deprecated && (
                                     <Box
                                         sx={{
                                             width: '100%',
@@ -380,12 +393,12 @@ export const ExtensionCard = memo(
                                         overflow: 'hidden',
                                         fontSize: '0.75rem'
                                     }}>
-                                    {footerStart ?? (
+                                    {footerStart ?? (fitProduct ? <TagChip accent>FIT package</TagChip> : (
                                         <CardFooterRating>
                                             {reviewCount > 0 ? (
                                                 <>
                                                     <Box component='span' sx={{ fontSize: '0.6875rem' }}>
-                                                        {formatRating(extension.averageRating ?? 0)}
+                                                        {formatRating(extension?.averageRating ?? 0)}
                                                     </Box>
                                                     <Box
                                                         component='span'
@@ -395,8 +408,8 @@ export const ExtensionCard = memo(
                                                 </>
                                             ) : null}
                                         </CardFooterRating>
-                                    )}
-                                    {downloadCount !== '0' && (
+                                    ))}
+                                    {!fitProduct && downloadCount !== '0' && (
                                         <Box
                                             component='span'
                                             sx={{

@@ -21,6 +21,7 @@ import { HomeCuratedSection } from '../../page-settings';
 import { SearchEntry } from '../../extension-registry-types';
 import { useSearch } from '../../hooks/use-search';
 import { CURATED_SIZE, DEFAULT_CURATED_SECTIONS, useCuratedRows } from './use-home-data';
+import { FIT_NATIVE_ENABLED, filterNativeFitProducts, useNativeFitCatalog } from '../../blackwhi/fit/native-fit-catalog';
 
 export interface CuratedSectionsProps {
     /** Rows to fetch and render; defaults to "Most downloaded" and "Recently updated". */
@@ -73,12 +74,23 @@ const RowLoadError = styled(ListLoadError)({
 export const CuratedSections: FunctionComponent<CuratedSectionsProps> = props => {
     const rows = useCuratedRows(props.sections ?? DEFAULT_CURATED_SECTIONS);
     const { search } = useSearch();
+    const fit = useNativeFitCatalog();
     return (
         <>
             {rows.map(row => {
+                const fitProducts = FIT_NATIVE_ENABLED && row.sortBy === 'timestamp'
+                    ? filterNativeFitProducts(fit.data?.products ?? [], '', '', 'timestamp', 'desc')
+                    : [];
+                const showFit = fitProducts.length > 0;
+                // Reserve two of the original seven card slots in Recently updated
+                // so FIT actually appears when the VSIX row is full. The original
+                // MUI row, spacing and number of columns are unchanged.
+                const fitSlots = row.sortBy === 'timestamp' ? Math.min(2, fitProducts.length) : 0;
+                const visibleExtensions = row.extensions.slice(0, CURATED_SIZE - fitSlots);
+                const rowLength = visibleExtensions.length + fitSlots;
                 // A failed refetch keeps the extensions it already had, like the search results.
-                const failed = !!row.error && !row.loading && row.extensions.length === 0;
-                if (!row.loading && row.extensions.length === 0 && !failed) {
+                const failed = !!row.error && !row.loading && row.extensions.length === 0 && !showFit;
+                if (!row.loading && rowLength === 0 && !failed && !(FIT_NATIVE_ENABLED && row.sortBy === 'timestamp' && fit.isLoading)) {
                     return null;
                 }
                 return (
@@ -87,7 +99,7 @@ export const CuratedSections: FunctionComponent<CuratedSectionsProps> = props =>
                         component='section'
                         key={row.title}
                         aria-label={row.title}
-                        aria-busy={row.loading}>
+                        aria-busy={row.loading || (FIT_NATIVE_ENABLED && row.sortBy === 'timestamp' && fit.isLoading)}>
                         <Box
                             sx={{
                                 display: 'flex',
@@ -132,21 +144,21 @@ export const CuratedSections: FunctionComponent<CuratedSectionsProps> = props =>
                             <RowGrid vanished={failed} aria-hidden={failed || undefined}>
                                 {/* Fixed index-keyed slots so cards stay mounted across the swap and don't re-fade. */}
                                 {Array.from(
-                                    { length: row.loading || failed ? CURATED_SIZE : row.extensions.length },
+                                    { length: row.loading || failed ? CURATED_SIZE : Math.min(CURATED_SIZE, rowLength) },
                                     (_, idx) => (
                                         <ExtensionCard
                                             key={idx}
-                                            extension={
-                                                failed
-                                                    ? VANISHED_EXTENSIONS[idx % VANISHED_EXTENSIONS.length]
-                                                    : row.extensions[idx]
-                                            }
+                                            extension={failed ? VANISHED_EXTENSIONS[idx % VANISHED_EXTENSIONS.length] : visibleExtensions[idx]}
+                                            fitProduct={!failed && idx >= visibleExtensions.length ? fitProducts[idx - visibleExtensions.length] : undefined}
                                             tabIndex={failed ? -1 : undefined}
                                             fadeDelayMs={(idx % CURATED_SIZE) * 200}
                                         />
                                     )
                                 )}
                             </RowGrid>
+                            {!!row.error && !row.loading && showFit && (
+                                <ListLoadError message='Extension results unavailable; FIT results remain visible.' onRetry={row.refetch} />
+                            )}
                             {failed && (
                                 <RowLoadError
                                     message='We couldn’t load extensions at this time.'
