@@ -16,6 +16,8 @@ import java.net.http.HttpResponse;
 import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -41,6 +43,14 @@ public final class FitRegistryCatalogClient {
     private static final Pattern ORIGIN = Pattern.compile("^http://127\\.0\\.0\\.1:([1-9][0-9]{0,4})$");
     private static final int MAX_BODY = 65_536;
     private static final String CATALOG_PATH = "/fit-registry/v1/catalog";
+    private static final String PAGE_PATH = "/fit-registry/v1/catalog/page";
+    private static final String EXACT_PATH = "/fit-registry/v1/releases/";
+    private static final Pattern PACKAGE_ID = Pattern.compile("^[a-z][a-z0-9.-]{1,120}$");
+    private static final Pattern VERSION = Pattern.compile("^[0-9]{1,8}\\.[0-9]{1,8}\\.[0-9]{1,8}(?:-[0-9A-Za-z.-]{1,40})?$");
+    private static final Pattern CURSOR = Pattern.compile("^[A-Za-z0-9_-]{10,512}$");
+    private static final Set<String> PAGE_FIELDS = Set.of("contract", "readOnly", "limit", "returnedCount", "hasMore", "nextCursor", "releases");
+    private static final Set<String> EXACT_FIELDS = Set.of("contract", "readOnly", "release");
+    private static final Set<String> RELEASE_FIELDS = Set.of("id", "version", "title", "state", "sha256", "publishedAt");
     private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(5);
     private static final JsonMapper STRICT_JSON = JsonMapper.builder()
             .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
@@ -93,12 +103,98 @@ public final class FitRegistryCatalogClient {
                 .build();
     }
 
-    /** Returns only public catalog projections, never a permission or a trust grant. */
+    /** Legacy endpoint remains intact for existing clients and fixtures. */
     public List<StoreProduct> listProducts() {
-        if (catalogUri == null) {
-            throw failure("BLACKWHI_STORE_REGISTRY_DISABLED");
+        var catalog = readObject(catalogUri, false);
+        try {
+            return RegistryCatalogProjection.project(catalog);
+        } catch (IllegalArgumentException exception) {
+            // Projection rejects malformed or unpublished Registry data. Do not
+            // disclose upstream content, implementation details or exception causes.
+            throw failure("BLACKWHI_STORE_REGISTRY_INVALID_RESPONSE");
         }
-        var request = HttpRequest.newBuilder(catalogUri)
+    }
+
+    public record CatalogPage(int limit, int returnedCount, boolean hasMore,
+                              String nextCursor, List<StoreProduct> products) { }
+
+    /** One bounded page, not an accumulated in-memory catalog. */
+    public CatalogPage listProductsPage(int limit, String cursor) {
+        if (limit < 1 || limit > 50 || (cursor != null && !CURSOR.matcher(cursor).matches())) {
+            throw failure("BLACKWHI_STORE_PAGE_ARGUMENT_INVALID");
+        }
+        URI origin = requireOrigin();
+        URI target = URI.create(origin.toString().replace(CATALOG_PATH,
+            PAGE_PATH + "?limit=" + limit + (cursor == null ? "" : "&cursor=" + cursor)));
+        var body = readObject(target, false);
+        if (!PAGE_FIELDS.equals(body.keySet()) ||
+            !"blackwhi.fit.registry.catalog.page.v1".equals(body.get("contract")) ||
+            !Boolean.TRUE.equals(body.get("readOnly")) ||
+            !(body.get("limit") instanceof Integer responseLimit) || responseLimit != limit ||
+            !(body.get("returnedCount") instanceof Integer count) || count < 0 || count > limit ||
+            !(body.get("hasMore") instanceof Boolean hasMore) ||
+            !(body.get("releases") instanceof List<?> releases) || releases.size() != count) {
+            throw failure("BLACKWHI_STORE_REGISTRY_INVALID_RESPONSE");
+        }
+        Object next = body.get("nextCursor");
+        if (hasMore != (next instanceof String) ||
+            (hasMore && (count == 0 || !CURSOR.matcher((String) next).matches()))) {
+            throw failure("BLACKWHI_STORE_REGISTRY_INVALID_RESPONSE");
+        }
+        var result = new ArrayList<StoreProduct>();
+        for (Object release : releases) result.add(projectOne(release));
+        // Cursors may repeat with malformed upstreams; caller/UI safeguards repeated pages.
+        return new CatalogPage(limit, count, hasMore, hasMore ? (String) next : null, List.copyOf(result));
+    }
+
+    /** Resolve an exact published release independently of any catalog window. */
+    public StoreProduct exactRelease(String packageId, String version) {
+        if (packageId == null || !PACKAGE_ID.matcher(packageId).matches() || packageId.contains("..") ||
+            version == null || !VERSION.matcher(version).matches()) {
+            return null;
+        }
+        URI origin = requireOrigin();
+        URI target = URI.create(origin.toString().replace(CATALOG_PATH, EXACT_PATH + packageId + "/" + version));
+        Map<String, Object> body;
+        try {
+            body = readObject(target, true);
+        } catch (StoreRegistryException exception) {
+            if ("BLACKWHI_STORE_RELEASE_NOT_FOUND".equals(exception.getMessage())) return null;
+            throw exception;
+        }
+        if (!EXACT_FIELDS.equals(body.keySet()) ||
+            !"blackwhi.fit.registry.catalog.v1".equals(body.get("contract")) ||
+            !Boolean.TRUE.equals(body.get("readOnly"))) {
+            throw failure("BLACKWHI_STORE_REGISTRY_INVALID_RESPONSE");
+        }
+        StoreProduct product = projectOne(body.get("release"));
+        if (!packageId.equals(product.productId()) || !version.equals(product.registryRelease().version())) {
+            throw failure("BLACKWHI_STORE_REGISTRY_INVALID_RESPONSE");
+        }
+        return product;
+    }
+
+    private static StoreProduct projectOne(Object item) {
+        if (!(item instanceof Map<?, ?> release) || !RELEASE_FIELDS.equals(release.keySet())) {
+            throw failure("BLACKWHI_STORE_REGISTRY_INVALID_RESPONSE");
+        }
+        try {
+            return RegistryCatalogProjection.project(Map.of(
+                "contract", "blackwhi.fit.registry.catalog.v1", "readOnly", true,
+                "releases", List.of(release))).getFirst();
+        } catch (RuntimeException exception) {
+            throw failure("BLACKWHI_STORE_REGISTRY_INVALID_RESPONSE");
+        }
+    }
+
+    private URI requireOrigin() {
+        if (catalogUri == null) throw failure("BLACKWHI_STORE_REGISTRY_DISABLED");
+        return catalogUri;
+    }
+
+    private Map<String, Object> readObject(URI target, boolean allow404) {
+        if (target == null) throw failure("BLACKWHI_STORE_REGISTRY_DISABLED");
+        var request = HttpRequest.newBuilder(target)
                 .timeout(timeout)
                 .header("Accept", "application/json")
                 .header("Accept-Encoding", "identity")
@@ -107,26 +203,23 @@ public final class FitRegistryCatalogClient {
         try {
             pending = client.sendAsync(request, info -> new LimitedSubscriber(MAX_BODY));
             var response = pending.get(timeout.toMillis(), TimeUnit.MILLISECONDS);
-            if (response.statusCode() != 200) {
-                throw failure("BLACKWHI_STORE_REGISTRY_UNAVAILABLE");
+            if (allow404 && response.statusCode() == 404) {
+                throw failure("BLACKWHI_STORE_RELEASE_NOT_FOUND");
             }
+            if (response.statusCode() != 200) throw failure("BLACKWHI_STORE_REGISTRY_UNAVAILABLE");
             if (!jsonContentType(response) || !identityContentEncoding(response)) {
                 throw failure("BLACKWHI_STORE_REGISTRY_INVALID_RESPONSE");
             }
-            // Exact v1 shape is enforced in RegistryCatalogProjection.
-            Map<String, Object> body = STRICT_JSON.readValue(
-                    response.body(), new TypeReference<Map<String, Object>>() { });
-            return RegistryCatalogProjection.project(body);
-        } catch (StoreRegistryException ex) {
-            throw ex;
-        } catch (InterruptedException ex) {
+            return STRICT_JSON.readValue(response.body(), new TypeReference<Map<String, Object>>() { });
+        } catch (StoreRegistryException exception) {
+            throw exception;
+        } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             throw failure("BLACKWHI_STORE_REGISTRY_UNAVAILABLE");
-        } catch (TimeoutException | ExecutionException ex) {
+        } catch (TimeoutException | ExecutionException exception) {
             if (pending != null) pending.cancel(true);
             throw failure("BLACKWHI_STORE_REGISTRY_UNAVAILABLE");
-        } catch (Exception ex) {
-            // No response bodies, URLs, secrets or exception messages in outward errors.
+        } catch (Exception exception) {
             throw failure("BLACKWHI_STORE_REGISTRY_INVALID_RESPONSE");
         }
     }

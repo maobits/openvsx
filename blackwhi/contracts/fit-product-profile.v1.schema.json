@@ -1,0 +1,771 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "release",
+    "identity",
+    "overview",
+    "categories",
+    "tags",
+    "packageSize",
+    "documentation",
+    "apiReference",
+    "examples",
+    "dependencies",
+    "compatibility",
+    "security",
+    "versions",
+    "distribution",
+    "media",
+    "links",
+    "community",
+    "support",
+    "business"
+  ],
+  "properties": {
+    "contract": {
+      "const": "blackwhi.fit.product.profile.v1"
+    },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "packageId",
+        "version",
+        "artifactSha256"
+      ],
+      "properties": {
+        "packageId": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 128,
+          "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)+$"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 80,
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+        },
+        "artifactSha256": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "displayName",
+        "publisherNamespace",
+        "publisherName",
+        "productType"
+      ],
+      "properties": {
+        "displayName": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 160
+        },
+        "publisherNamespace": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 128,
+          "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)+$"
+        },
+        "publisherName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 160
+        },
+        "productType": {
+          "enum": [
+            "fit-application",
+            "fit-library",
+            "fit-module-collection",
+            "fit-framework",
+            "fit-tool",
+            "fit-template",
+            "fit-integration",
+            "fit-educational-package"
+          ]
+        }
+      }
+    },
+    "overview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "summary",
+        "description",
+        "features"
+      ],
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 30,
+          "maxLength": 320
+        },
+        "description": {
+          "type": "string",
+          "minLength": 80,
+          "maxLength": 12000
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 12,
+            "maxLength": 300
+          },
+          "minItems": 1,
+          "maxItems": 30
+        }
+      }
+    },
+    "categories": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "taxonomyContract",
+        "primary",
+        "subcategory",
+        "secondary"
+      ],
+      "properties": {
+        "taxonomyContract": {
+          "const": "blackwhi.fit.taxonomy.v1"
+        },
+        "primary": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+        },
+        "secondary": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 64,
+            "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 0,
+          "maxItems": 8
+        },
+        "subcategory": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/slug"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 64,
+        "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+      },
+      "minItems": 1,
+      "maxItems": 24
+    },
+    "packageSize": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "downloadBytes",
+        "unpackedBytes",
+        "entryCount",
+        "documentationBytes",
+        "mediaBytes",
+        "contentFootprintBytes"
+      ],
+      "properties": {
+        "downloadBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "unpackedBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "entryCount": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "documentationBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mediaBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "contentFootprintBytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "documentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "readme",
+        "quickStart",
+        "changelog",
+        "licenseText"
+      ],
+      "properties": {
+        "readme": {
+          "$ref": "#/$defs/asset"
+        },
+        "quickStart": {
+          "$ref": "#/$defs/asset"
+        },
+        "changelog": {
+          "$ref": "#/$defs/asset"
+        },
+        "licenseText": {
+          "$ref": "#/$defs/asset"
+        },
+        "apiGuide": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/asset"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "apiReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "functions",
+        "notApplicableReason"
+      ],
+      "properties": {
+        "functions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/function"
+          },
+          "minItems": 0,
+          "maxItems": 120
+        },
+        "notApplicableReason": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 20,
+              "maxLength": 400
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "examples": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/example"
+      },
+      "minItems": 1,
+      "maxItems": 40
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/dependency"
+      },
+      "minItems": 0,
+      "maxItems": 8
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "engine",
+        "platforms"
+      ],
+      "properties": {
+        "engine": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "starlarkVersion",
+            "protocol",
+            "registryVersion"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 64
+            },
+            "starlarkVersion": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 60
+            },
+            "protocol": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "registryVersion": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 60
+            }
+          }
+        },
+        "platforms": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "blackwhi-cli",
+              "blackwhi-web",
+              "android",
+              "ios",
+              "linux",
+              "macos",
+              "windows"
+            ]
+          },
+          "minItems": 1,
+          "maxItems": 7
+        }
+      }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "declaredCapabilities",
+        "requestedPermissions",
+        "authority"
+      ],
+      "properties": {
+        "declaredCapabilities": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          },
+          "minItems": 0,
+          "maxItems": 20
+        },
+        "requestedPermissions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 160
+          },
+          "minItems": 0,
+          "maxItems": 40
+        },
+        "authority": {
+          "const": "blackwhi-registry"
+        }
+      }
+    },
+    "versions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "releaseNotes"
+      ],
+      "properties": {
+        "releaseNotes": {
+          "$ref": "#/$defs/asset"
+        }
+      }
+    },
+    "distribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "channel",
+        "filename"
+      ],
+      "properties": {
+        "channel": {
+          "const": "blackwhi-registry"
+        },
+        "filename": {
+          "type": "string",
+          "minLength": 12,
+          "maxLength": 260
+        }
+      }
+    },
+    "media": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "icon",
+        "cover",
+        "screenshots",
+        "diagrams",
+        "videos"
+      ],
+      "properties": {
+        "icon": {
+          "$ref": "#/$defs/asset"
+        },
+        "cover": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/asset"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "screenshots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/asset"
+          },
+          "minItems": 0,
+          "maxItems": 12
+        },
+        "diagrams": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/asset"
+          },
+          "minItems": 0,
+          "maxItems": 12
+        },
+        "videos": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/link"
+          },
+          "minItems": 0,
+          "maxItems": 8
+        }
+      }
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/link"
+      },
+      "minItems": 1,
+      "maxItems": 20
+    },
+    "community": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contributions",
+        "reviewsManagedByStore"
+      ],
+      "properties": {
+        "contributions": {
+          "enum": [
+            "welcome",
+            "restricted",
+            "closed"
+          ]
+        },
+        "reviewsManagedByStore": {
+          "const": true
+        }
+      }
+    },
+    "support": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model",
+        "contactLinks"
+      ],
+      "properties": {
+        "model": {
+          "enum": [
+            "community",
+            "self-service",
+            "professional",
+            "organization"
+          ]
+        },
+        "contactLinks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/link"
+          },
+          "minItems": 1,
+          "maxItems": 8
+        }
+      }
+    },
+    "business": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model",
+        "distribution",
+        "licenseExpression",
+        "licenseDocument",
+        "externalServices"
+      ],
+      "properties": {
+        "model": {
+          "enum": [
+            "free-open-source",
+            "freeware",
+            "open-core",
+            "commercial",
+            "external-saas",
+            "educational"
+          ]
+        },
+        "distribution": {
+          "enum": [
+            "free",
+            "external-terms",
+            "restricted"
+          ]
+        },
+        "licenseExpression": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 180
+        },
+        "licenseDocument": {
+          "$ref": "#/$defs/asset"
+        },
+        "externalServices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/link"
+          },
+          "minItems": 0,
+          "maxItems": 12
+        }
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.blackwhi.com/fit/1/product-profile.schema.json",
+  "title": "BlackWhi FIT Product Profile v1 \u2014 presentation only, not release authorization",
+  "description": "Release-digest-bound, sidecar product profile. All runtime trust states are Registry authoritative. No payment secrets or claimed verification badges.",
+  "$defs": {
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "bytes"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 220,
+          "pattern": "^(?:docs|assets)/[A-Za-z0-9._/-]+$"
+        },
+        "sha256": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2097152
+        }
+      }
+    },
+    "link": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "label",
+        "url"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "website",
+            "documentation",
+            "source",
+            "tutorial",
+            "issues",
+            "support",
+            "license",
+            "privacy",
+            "roadmap",
+            "other"
+          ]
+        },
+        "label": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "url": {
+          "type": "string",
+          "minLength": 9,
+          "maxLength": 2048
+        }
+      }
+    },
+    "function": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "module",
+        "symbol",
+        "summary",
+        "parameters",
+        "returns"
+      ],
+      "properties": {
+        "module": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 240
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 12,
+          "maxLength": 600
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "type",
+              "description"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "type": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              },
+              "description": {
+                "type": "string",
+                "minLength": 8,
+                "maxLength": 300
+              }
+            }
+          },
+          "minItems": 0,
+          "maxItems": 30
+        },
+        "returns": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 300
+        }
+      }
+    },
+    "example": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "module",
+        "symbol",
+        "description"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 120
+        },
+        "module": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 240
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "description": {
+          "type": "string",
+          "minLength": 12,
+          "maxLength": 500
+        }
+      }
+    },
+    "dependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "manifestSha256"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 128,
+          "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)+$"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 80,
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+        },
+        "manifestSha256": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "slug": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    }
+  }
+}

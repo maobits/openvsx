@@ -19,7 +19,6 @@ import { HeaderMenu } from '../header-menu';
 import { MainContext } from '../context';
 import { usePageSearchBar } from '../context/search/page-search-bar-context';
 import { useExtensionTint, useNavbarBlurExtent } from '../context/navbar-chrome-context';
-import { OpenVsxMark } from '../components/openvsx-mark';
 import { NavSearchField } from './nav-search-field';
 import { NAVBAR_HEIGHT_PX } from '../default/theme';
 
@@ -237,7 +236,8 @@ export const AppNavbar: FunctionComponent = () => {
                             // Keeps the reversed mark off the browser's link color.
                             style={{ display: 'flex', textDecoration: 'none', color: 'inherit' }}>
                             {/* Same mark height as the full toolbar logo */}
-                            <OpenVsxMark style={{ height: '2.5rem' }} />
+                            <Box component='span' sx={{ fontFamily: 'Georgia, serif', fontWeight: 800,
+                                fontSize: '1.5rem', letterSpacing: '-0.06em', color: 'inherit' }}>BW</Box>
                         </RouteLink>
                     </Box>
                     {/* Full logo — desktop always, mobile only while the nav search field is hidden. */}

@@ -6,6 +6,7 @@
 package org.eclipse.openvsx.blackwhi.integration;
 
 import java.util.Map;
+import java.util.LinkedHashMap;
 
 import org.eclipse.openvsx.blackwhi.integration.FitRegistryCatalogClient.StoreRegistryException;
 import org.springframework.http.CacheControl;
@@ -14,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * This endpoint exposes only a bounded, read-only projection of the already public
@@ -59,6 +61,42 @@ public final class FitCatalogReadApi {
             return error(HttpStatus.SERVICE_UNAVAILABLE, "FIT_REGISTRY_UNAVAILABLE");
         } catch (IllegalArgumentException exception) {
             // The strict projection rejected an unexpected contract/value.
+            return error(HttpStatus.BAD_GATEWAY, "FIT_REGISTRY_INVALID_RESPONSE");
+        }
+    }
+
+    /** Cursor browse contract; does not claim a global count or cross-catalog search. */
+    @GetMapping(path = PATH + "/page", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<String, Object>> page(
+            @RequestParam(name = "limit", defaultValue = "25") String limitText,
+            @RequestParam(name = "cursor", required = false) String cursor) {
+        if (!limitText.matches("[1-9][0-9]?") || Integer.parseInt(limitText) > 50 ||
+            (cursor != null && !cursor.matches("[A-Za-z0-9_-]{10,512}"))) {
+            return error(HttpStatus.BAD_REQUEST, "FIT_CATALOG_PAGE_ARGUMENT_INVALID");
+        }
+        try {
+            var page = registry.page(Integer.parseInt(limitText), cursor);
+            var body = new LinkedHashMap<String, Object>();
+            body.put("contract", "blackwhi.store.fit.products.page.v1");
+            body.put("readOnly", true);
+            body.put("sourceContract", "blackwhi.fit.registry.catalog.page.v1");
+            body.put("coverage", "cursor-page");
+            body.put("limit", page.limit());
+            body.put("returnedCount", page.returnedCount());
+            body.put("hasMore", page.hasMore());
+            body.put("nextCursor", page.nextCursor());
+            body.put("products", page.products());
+            return response(HttpStatus.OK, body);
+        } catch (StoreRegistryException exception) {
+            if ("BLACKWHI_STORE_REGISTRY_DISABLED".equals(exception.getMessage())) {
+                return error(HttpStatus.SERVICE_UNAVAILABLE, "FIT_REGISTRY_NOT_CONFIGURED");
+            }
+            if ("BLACKWHI_STORE_REGISTRY_INVALID_RESPONSE".equals(exception.getMessage()) ||
+                    "BLACKWHI_STORE_REGISTRY_BODY_TOO_LARGE".equals(exception.getMessage())) {
+                return error(HttpStatus.BAD_GATEWAY, "FIT_REGISTRY_INVALID_RESPONSE");
+            }
+            return error(HttpStatus.SERVICE_UNAVAILABLE, "FIT_REGISTRY_UNAVAILABLE");
+        } catch (IllegalArgumentException exception) {
             return error(HttpStatus.BAD_GATEWAY, "FIT_REGISTRY_INVALID_RESPONSE");
         }
     }

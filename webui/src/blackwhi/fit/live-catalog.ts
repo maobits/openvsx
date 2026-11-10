@@ -116,3 +116,64 @@ export async function fetchLiveFitCatalog(signal?: AbortSignal): Promise<FitStor
     }
     return decodeFitCatalog(parsed);
 }
+
+/** STORE-04.2: bounded transport for ONE page of the public Registry. */
+export interface FitStoreCatalogPage {
+    contract: 'blackwhi.store.fit.products.page.v1';
+    readOnly: true;
+    sourceContract: 'blackwhi.fit.registry.catalog.page.v1';
+    coverage: 'cursor-page';
+    limit: number;
+    returnedCount: number;
+    hasMore: boolean;
+    nextCursor: string | null;
+    products: FitStoreProduct[];
+}
+
+const CURSOR = /^[A-Za-z0-9_-]{10,512}$/;
+export function decodeFitCatalogPage(input: unknown): FitStoreCatalogPage {
+    if (!isObject(input) || Object.keys(input).sort().join(',') !==
+        'contract,coverage,hasMore,limit,nextCursor,products,readOnly,returnedCount,sourceContract' ||
+        input.contract !== 'blackwhi.store.fit.products.page.v1' || input.readOnly !== true ||
+        input.sourceContract !== 'blackwhi.fit.registry.catalog.page.v1' ||
+        input.coverage !== 'cursor-page' || !Number.isInteger(input.limit) ||
+        (input.limit as number) < 1 || (input.limit as number) > 50 ||
+        !Number.isInteger(input.returnedCount) || !Array.isArray(input.products) ||
+        input.products.length !== input.returnedCount || input.products.length > (input.limit as number) ||
+        typeof input.hasMore !== 'boolean' ||
+        (input.hasMore ? !isString(input.nextCursor) || !CURSOR.test(input.nextCursor) || !input.returnedCount :
+            input.nextCursor !== null)) {
+        throw new FitCatalogError('STORE_RESPONSE_INVALID', 502);
+    }
+    // Reuse strict public product/release validation, without pretending this is the legacy response.
+    decodeFitCatalog({ contract: 'blackwhi.store.fit.products.v1', readOnly: true,
+        sourceContract: 'blackwhi.fit.registry.catalog.v1', coverage: 'latest-50-releases',
+        returnedCount: input.returnedCount, products: input.products });
+    return input as unknown as FitStoreCatalogPage;
+}
+
+export async function fetchPagedFitCatalog(cursor: string | null, signal?: AbortSignal): Promise<FitStoreCatalogPage> {
+    if (cursor !== null && !CURSOR.test(cursor)) throw new FitCatalogError('STORE_CURSOR_INVALID', 400);
+    const endpoint = `${FIT_STORE_API}/page?limit=25${cursor === null ? '' : `&cursor=${encodeURIComponent(cursor)}`}`;
+    let response: Response;
+    try {
+        response = await fetch(endpoint, { method: 'GET', headers: { Accept: 'application/json' },
+            credentials: 'omit', cache: 'no-store', redirect: 'error', signal });
+    } catch (error) {
+        if (signal?.aborted) throw error;
+        throw new FitCatalogError('STORE_API_UNREACHABLE', 0);
+    }
+    if (!/^application\/json(?:\s*;|$)/i.test(response.headers.get('content-type') ?? '')) {
+        throw new FitCatalogError('STORE_RESPONSE_INVALID', response.status);
+    }
+    const body = await response.text();
+    if (body.length > 90_000) throw new FitCatalogError('STORE_RESPONSE_INVALID', response.status);
+    let data: unknown;
+    try { data = JSON.parse(body); } catch { throw new FitCatalogError('STORE_RESPONSE_INVALID', response.status); }
+    if (!response.ok) {
+        const code = isObject(data) && data.contract === 'blackwhi.store.fit.error.v1' &&
+            isString(data.code) && /^[A-Z_]{3,64}$/.test(data.code) ? data.code : 'STORE_API_ERROR';
+        throw new FitCatalogError(code, response.status);
+    }
+    return decodeFitCatalogPage(data);
+}

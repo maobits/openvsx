@@ -21,7 +21,7 @@ import { useExtensionResultsCursor } from '../hooks/use-extension-results-cursor
 import { useInfiniteSearch } from '../hooks/use-infinite-search';
 import { useInView } from '../hooks/use-in-view';
 import { FIT_CATEGORY, FIT_NATIVE_ENABLED, filterNativeFitProducts, useNativeFitCatalog } from '../blackwhi/fit/native-fit-catalog';
-import { Box, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 
 export const ExtensionList: FunctionComponent<ExtensionListProps> = ({ filter, onUpdate }) => {
     const {
@@ -119,8 +119,23 @@ export const ExtensionList: FunctionComponent<ExtensionListProps> = ({ filter, o
                 <Typography sx={{ my: 3, color: 'text.secondary' }}>
                     {filter.sortBy === 'rating' || filter.sortBy === 'downloadCount'
                         ? 'Rating and download rankings are not available for FIT packages yet.'
-                        : 'No public FIT packages match this search (latest 50 releases).'}
+                        : 'No public FIT packages match the currently loaded releases.'}
                 </Typography>
+            )}
+            {FIT_NATIVE_ENABLED && native.hasNextPage && (
+                <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                    <Button variant='outlined' disabled={native.isFetchingNextPage}
+                        onClick={() => void native.fetchNextPage()}>
+                        {native.isFetchingNextPage ? 'Loading FIT releases…' : 'Load more FIT packages'}
+                    </Button>
+                    <Typography variant='body2' color='text.secondary'>
+                        FIT results and filters currently cover loaded releases only; more pages are available.
+                    </Typography>
+                </Box>
+            )}
+            {FIT_NATIVE_ENABLED && native.isFetchNextPageError && (
+                <ExtensionListLoadError message='Could not load the next FIT page.'
+                    onRetry={() => void native.fetchNextPage()} />
             )}
             <div ref={sentinelRef} />
         </div>

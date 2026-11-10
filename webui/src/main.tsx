@@ -10,7 +10,8 @@
 
 import { FunctionComponent, ReactNode, useCallback, useEffect, useMemo, useState, useRef, lazy, Suspense } from 'react';
 import { CssBaseline } from '@mui/material';
-import { Route, Routes } from 'react-router';
+import { Navigate, Route, Routes, useParams } from 'react-router';
+import { FIT_NATIVE_ENABLED } from './blackwhi/fit/native-fit-catalog';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { AppProviders } from './app-providers';
@@ -40,6 +41,15 @@ export const Main: FunctionComponent<MainProps> = props => (
         <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
 );
+
+
+// Historical FIT preview URLs resolve to the native Open VSX detail page.
+// This is navigation only, not a second storefront or a second data authority.
+const LegacyFitProductRedirect = () => {
+    const { packageId, version } = useParams<{ packageId: string; version: string }>();
+    if (!packageId || !version) return null;
+    return <Navigate replace to={`/fit-package/${encodeURIComponent(packageId)}/versions/${encodeURIComponent(version)}`} />;
+};
 
 const MainContent: FunctionComponent<MainProps> = props => {
     const [error, setError] = useState<{ title?: string; message: string; code?: number | string }>();
@@ -135,6 +145,14 @@ const MainContent: FunctionComponent<MainProps> = props => {
                             </Suspense>
                         }
                     />
+                    {FIT_NATIVE_ENABLED && (
+                        <>
+                            <Route path='/blackwhi/fit'
+                                element={<Navigate replace to='/search?category=FIT%20Packages' />} />
+                            <Route path='/blackwhi/fit/:packageId/:version'
+                                element={<LegacyFitProductRedirect />} />
+                        </>
+                    )}
                     <Route path='*' element={<AppLayout userLoading={userLoading} />} />
                 </Routes>
                 {error ? (

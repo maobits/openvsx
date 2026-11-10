@@ -2,26 +2,36 @@
  * SPDX-License-Identifier: EPL-2.0
  * Read-only, explicit type distinction. No VSIX impersonation or synthetic downloads.
  */
-import { useQuery } from '@tanstack/react-query';
-import { FitStoreProduct, fetchLiveFitCatalog } from './live-catalog';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { FitStoreProduct, fetchPagedFitCatalog } from './live-catalog';
 import { SortBy, SortOrder } from '../../extension-registry-types';
 
 export const FIT_CATEGORY = 'FIT Packages' as const;
 export const FIT_NATIVE_ENABLED = import.meta.env.DEV && import.meta.env.VITE_BLACKWHI_STORE_FIT_LIVE === '1';
 
 export function useNativeFitCatalog() {
-    return useQuery({
-        queryKey: ['blackwhi', 'fit', 'native-public-catalog'],
-        queryFn: ({ signal }) => fetchLiveFitCatalog(signal),
+    const query = useInfiniteQuery({
+        queryKey: ['blackwhi', 'fit', 'native-public-catalog-page-v1'],
+        initialPageParam: null as string | null,
+        queryFn: ({ pageParam, signal }) => fetchPagedFitCatalog(pageParam, signal),
+        getNextPageParam: (last, pages) => last.hasMore && last.nextCursor &&
+            !pages.slice(0, -1).some(page => page.nextCursor === last.nextCursor)
+            ? last.nextCursor : undefined,
         enabled: FIT_NATIVE_ENABLED,
         retry: false,
         staleTime: 30_000
     });
+    // One native catalog, incrementally backed by the public Registry. No fabricated global count.
+    return {
+        ...query,
+        data: query.data ? { products: query.data.pages.flatMap(page => page.products),
+            loadedReleases: query.data.pages.reduce((total, page) => total + page.returnedCount, 0) } : undefined
+    };
 }
 
 /**
- * The Store currently exposes only the 50 latest public releases. This is
- * explicitly a limited, client-side view, not full-text Registry search.
+ * Search and sorting currently operate only on fetched cursor pages; this is
+ * NOT full-catalog server-side search. Results are explicitly marked as partial.
  * Ratings/download counts are unavailable and must never be invented.
  */
 export function filterNativeFitProducts(

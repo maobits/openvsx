@@ -1,0 +1,174 @@
+{
+  "contract": "blackwhi.fit.product.profile.v2",
+  "release": {
+    "packageId": "org.blackwhi.examples.packaged.volume",
+    "version": "1.0.0",
+    "artifactSha256": "a2af7f173b5acdb0907a766941db20f29fd79ef3645b5b7e70d57c755537cd09"
+  },
+  "identity": {
+    "displayName": "Packaged Volume Test Fixture",
+    "publisherNamespace": "org.blackwhi",
+    "publisherName": "BlackWhi test fixture",
+    "productType": "fit-application"
+  },
+  "overview": {
+    "summary": "A deterministic example of packaged FIT modules and dependencies.",
+    "description": "This is a local contract test fixture. It documents an actual canonical archive with fixed inputs and demonstrates dependency verification without claiming external publication or independent review.",
+    "features": [
+      "Validates pinned dependencies using the existing canonical archive rules."
+    ]
+  },
+  "categories": {
+    "taxonomyContract": "blackwhi.fit.taxonomy.v1",
+    "primary": "development-tools",
+    "subcategory": "software-libraries",
+    "secondary": [
+      "data-analytics"
+    ]
+  },
+  "tags": [
+    "fit",
+    "test-fixture",
+    "dependencies"
+  ],
+  "packageSize": {
+    "downloadBytes": 2818,
+    "unpackedBytes": 2000,
+    "entryCount": 6,
+    "documentationBytes": 425,
+    "mediaBytes": 0,
+    "contentFootprintBytes": 3243
+  },
+  "documentation": {
+    "readme": {
+      "path": "docs/README.md",
+      "sha256": "b430050a9b16923b6ffa57d0e021115742fd459f7c9ca65edefd36585d2cfa0c",
+      "bytes": 122
+    },
+    "quickStart": {
+      "path": "docs/QUICKSTART.md",
+      "sha256": "0a5196f74254b065daf3867d377ff4002cb1c05fbcfdc1a13d583304fb606912",
+      "bytes": 110
+    },
+    "changelog": {
+      "path": "docs/CHANGELOG.md",
+      "sha256": "167c3196f43c1f7aec83bc634f4d0d9dda5f67b3b804b8d79838528245acc60a",
+      "bytes": 88
+    },
+    "licenseText": {
+      "path": "docs/LICENSE.md",
+      "sha256": "40a23a844737685373a06f8e2f23f504e48fcb195fda9cd1d18bd7819df357ab",
+      "bytes": 105
+    },
+    "apiGuide": null
+  },
+  "apiReference": {
+    "functions": [
+      {
+        "module": "vendor/org.blackwhi.math/1.0.0/volume.fit",
+        "symbol": "calculate_volume",
+        "summary": "Calculates total repetition count from sets and repetitions.",
+        "parameters": [
+          {
+            "name": "sets",
+            "type": "int",
+            "description": "Number of completed sets"
+          },
+          {
+            "name": "reps",
+            "type": "int",
+            "description": "Repetitions in each set"
+          }
+        ],
+        "returns": "Number of total repetitions"
+      }
+    ],
+    "notApplicableReason": null
+  },
+  "examples": [
+    {
+      "title": "Calculate repetitions",
+      "module": "vendor/org.blackwhi.math/1.0.0/volume.fit",
+      "symbol": "calculate_volume",
+      "description": "The actual package calls calculate_volume with four sets and twelve repetitions."
+    }
+  ],
+  "dependencies": [
+    {
+      "id": "org.blackwhi.math",
+      "version": "1.0.0",
+      "manifestSha256": "f059e986a4a028dcdf266a5b9096c6994d2275c096da7f454271b0015df647f4"
+    }
+  ],
+  "compatibility": {
+    "engine": {
+      "id": "starlark-rust",
+      "starlarkVersion": "0.14.2",
+      "protocol": 1,
+      "registryVersion": "0.4.8"
+    },
+    "platforms": [
+      "blackwhi-cli"
+    ]
+  },
+  "security": {
+    "declaredCapabilities": [],
+    "requestedPermissions": [],
+    "authority": "blackwhi-registry"
+  },
+  "versions": {
+    "releaseNotes": {
+      "path": "docs/CHANGELOG.md",
+      "sha256": "167c3196f43c1f7aec83bc634f4d0d9dda5f67b3b804b8d79838528245acc60a",
+      "bytes": 88
+    }
+  },
+  "distribution": {
+    "channel": "blackwhi-registry",
+    "filename": "org.blackwhi.examples.packaged.volume-1.0.0.fitpkg"
+  },
+  "media": {
+    "icon": null,
+    "cover": null,
+    "screenshots": [],
+    "diagrams": [],
+    "videos": []
+  },
+  "links": [],
+  "community": {
+    "contributions": "closed",
+    "reviewsManagedByStore": true
+  },
+  "support": {
+    "model": "none",
+    "contactLinks": []
+  },
+  "business": {
+    "model": "educational",
+    "distribution": "free",
+    "licenseExpression": "MIT",
+    "licenseDocument": {
+      "path": "docs/LICENSE.md",
+      "sha256": "40a23a844737685373a06f8e2f23f504e48fcb195fda9cd1d18bd7819df357ab",
+      "bytes": 105
+    },
+    "externalServices": []
+  },
+  "editorial": {
+    "state": "approved",
+    "fieldStatus": {
+      "publisher": "provided",
+      "links": "not-provided",
+      "support": "not-applicable",
+      "license": "provided",
+      "icon": "not-provided"
+    },
+    "rightsReview": {
+      "reviewer": "Isolated fixture operator",
+      "reviewedDate": "2026-11-09",
+      "publisherAuthorized": true,
+      "licenseTextReviewed": true,
+      "redistributionRightsConfirmed": true
+    }
+  }
+}
