@@ -4,7 +4,9 @@
 import { defineConfig } from 'vitest/config';
 export default defineConfig({
     test: {
+        include: ['test/unit/blackwhi/**/*.spec.{ts,tsx}'],
         environment: 'jsdom',
-        setupFiles: ['./test/unit/blackwhi/setup.ts']
+        // Preserve the native test teardown: React cleanup and singleton cache reset.
+        setupFiles: ['./test/setup.ts', './test/unit/blackwhi/setup.ts']
     }
 });

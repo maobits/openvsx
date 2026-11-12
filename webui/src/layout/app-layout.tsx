@@ -144,7 +144,9 @@ const AppLayoutContent: FunctionComponent<AppLayoutProps> = props => {
                         <Route path={PublishRoutes.ROOT} element={<PublishPage />} />
                         <Route path={NamespaceDetailRoutes.MAIN} element={<NamespaceDetail />} />
                         {FIT_NATIVE_ENABLED && <Route path='/fit-package/:packageId' element={<FitPackageDetail />} />}
-                        {FIT_NATIVE_ENABLED && <Route path='/fit-package/:packageId/versions/:version' element={<FitPackageDetail />} />}
+                        {FIT_NATIVE_ENABLED && (
+                            <Route path='/fit-package/:packageId/versions/:version' element={<FitPackageDetail />} />
+                        )}
                         <Route path={ExtensionDetailRoutes.MAIN} element={<ExtensionDetail />} />
                         <Route path={ExtensionDetailRoutes.MAIN_TARGET} element={<ExtensionDetail />} />
                         {AdditionalRoutes ?? null}

@@ -14,9 +14,10 @@ export function useNativeFitCatalog() {
         queryKey: ['blackwhi', 'fit', 'native-public-catalog-page-v1'],
         initialPageParam: null as string | null,
         queryFn: ({ pageParam, signal }) => fetchPagedFitCatalog(pageParam, signal),
-        getNextPageParam: (last, pages) => last.hasMore && last.nextCursor &&
-            !pages.slice(0, -1).some(page => page.nextCursor === last.nextCursor)
-            ? last.nextCursor : undefined,
+        getNextPageParam: (last, pages) =>
+            last.hasMore && last.nextCursor && !pages.slice(0, -1).some(page => page.nextCursor === last.nextCursor)
+                ? last.nextCursor
+                : undefined,
         enabled: FIT_NATIVE_ENABLED,
         retry: false,
         staleTime: 30_000
@@ -24,8 +25,12 @@ export function useNativeFitCatalog() {
     // One native catalog, incrementally backed by the public Registry. No fabricated global count.
     return {
         ...query,
-        data: query.data ? { products: query.data.pages.flatMap(page => page.products),
-            loadedReleases: query.data.pages.reduce((total, page) => total + page.returnedCount, 0) } : undefined
+        data: query.data
+            ? {
+                  products: query.data.pages.flatMap(page => page.products),
+                  loadedReleases: query.data.pages.reduce((total, page) => total + page.returnedCount, 0)
+              }
+            : undefined
     };
 }
 
@@ -48,16 +53,22 @@ export function filterNativeFitProducts(
     // Multiple versions are catalog releases; a product card must appear once.
     for (const product of products) {
         const previous = unique.get(product.productId);
-        if (!previous || Date.parse(product.registryRelease.publishedAt) > Date.parse(previous.registryRelease.publishedAt)) {
+        if (
+            !previous ||
+            Date.parse(product.registryRelease.publishedAt) > Date.parse(previous.registryRelease.publishedAt)
+        ) {
             unique.set(product.productId, product);
         }
     }
-    const filtered = [...unique.values()].filter(product =>
-        !term || `${product.displayName} ${product.productId} ${product.publisherNamespace}`
-            .toLocaleLowerCase().includes(term));
+    const filtered = [...unique.values()].filter(
+        product =>
+            !term ||
+            `${product.displayName} ${product.productId} ${product.publisherNamespace}`
+                .toLocaleLowerCase()
+                .includes(term)
+    );
     if (sortBy === 'timestamp') {
-        filtered.sort((a, b) =>
-            Date.parse(a.registryRelease.publishedAt) - Date.parse(b.registryRelease.publishedAt));
+        filtered.sort((a, b) => Date.parse(a.registryRelease.publishedAt) - Date.parse(b.registryRelease.publishedAt));
         if (sortOrder === 'desc') filtered.reverse();
     } else {
         // Relevance across two registries is not comparable yet. FIT items retain

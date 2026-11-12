@@ -32,8 +32,9 @@ describe('native FIT catalog projection into original Open VSX', () => {
         expect(found[0].registryRelease.version).toBe('1.1.0');
     });
     it('uses the native search query on ID, title and publisher', () => {
-        expect(filterNativeFitProducts(products, 'analytics', '', 'relevance', 'desc').map(p => p.productId))
-            .toEqual(['studio.fit-stats']);
+        expect(filterNativeFitProducts(products, 'analytics', '', 'relevance', 'desc').map(p => p.productId)).toEqual([
+            'studio.fit-stats'
+        ]);
         expect(filterNativeFitProducts(products, 'studio.fit-trainer', '', 'relevance', 'desc')).toHaveLength(1);
     });
     it('keeps the FIT category distinct from VSIX categories', () => {

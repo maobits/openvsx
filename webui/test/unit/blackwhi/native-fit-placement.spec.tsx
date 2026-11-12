@@ -39,8 +39,14 @@ vi.mock('../../../src/blackwhi/fit/native-fit-catalog', async importOriginal => 
 });
 
 const extensions: SearchEntry[] = Array.from({ length: 7 }, (_, idx) => ({
-    namespace: 'open-vsx', name: `ext${idx}`, displayName: `Extension ${idx}`,
-    version: '1.0.0', files: {}, url: '', allVersions: [], deprecated: false
+    namespace: 'open-vsx',
+    name: `ext${idx}`,
+    displayName: `Extension ${idx}`,
+    version: '1.0.0',
+    files: {},
+    url: '',
+    allVersions: [],
+    deprecated: false
 }));
 const result: SearchResult = { offset: 0, totalSize: extensions.length, extensions };
 
@@ -50,12 +56,22 @@ describe('native FIT placement in the existing Open VSX screens', () => {
         const onUpdate = vi.fn();
         renderWithProviders(
             <ExtensionList
-                filter={{ query: 'workout', category: 'FIT Packages', sortBy: 'relevance', sortOrder: 'desc', size: 30, offset: 0 }}
+                filter={{
+                    query: 'workout',
+                    category: 'FIT Packages',
+                    sortBy: 'relevance',
+                    sortOrder: 'desc',
+                    size: 30,
+                    offset: 0
+                }}
                 onUpdate={onUpdate}
             />,
             { mainContext: { service: { search } as unknown as ExtensionRegistryService } }
         );
-        expect(await screen.findByRole('link', { name: 'Workout Planner' })).toHaveAttribute('href', '/fit-package/studio.fit-trainer');
+        expect(await screen.findByRole('link', { name: 'Workout Planner' })).toHaveAttribute(
+            'href',
+            '/fit-package/studio.fit-trainer'
+        );
         expect(screen.queryByRole('link', { name: 'Extension 0' })).not.toBeInTheDocument();
         await waitFor(() => expect(onUpdate).toHaveBeenCalledWith(1));
         expect(search).not.toHaveBeenCalled();
@@ -63,10 +79,9 @@ describe('native FIT placement in the existing Open VSX screens', () => {
 
     it('shows real FIT products within the existing seven-card Recently updated row', async () => {
         const search = vi.fn().mockResolvedValue(result);
-        renderWithProviders(
-            <CuratedSections sections={[{ title: 'Recently updated', sortBy: 'timestamp' }]} />,
-            { mainContext: { service: { search } as unknown as ExtensionRegistryService } }
-        );
+        renderWithProviders(<CuratedSections sections={[{ title: 'Recently updated', sortBy: 'timestamp' }]} />, {
+            mainContext: { service: { search } as unknown as ExtensionRegistryService }
+        });
         const row = await screen.findByRole('region', { name: 'Recently updated' });
         await waitFor(() => expect(within(row).getAllByRole('link')).toHaveLength(7));
         expect(within(row).getByRole('link', { name: 'Workout Planner' })).toBeInTheDocument();

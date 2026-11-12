@@ -33,7 +33,8 @@ export const SearchPage: FunctionComponent = () => {
     const { query: searchQuery, category, sortBy, sortOrder } = filter;
     const categories = useCategories();
     const nativeCategories: Array<ExtensionCategory | typeof FIT_CATEGORY> = FIT_NATIVE_ENABLED
-        ? [...categories, FIT_CATEGORY] : categories;
+        ? [...categories, FIT_CATEGORY]
+        : categories;
     const iconFor = (cat: ExtensionCategory | typeof FIT_CATEGORY | '') =>
         cat === FIT_CATEGORY ? CodeIcon : cat ? CATEGORY_ICONS[cat] : DefaultCategoryIcon;
 

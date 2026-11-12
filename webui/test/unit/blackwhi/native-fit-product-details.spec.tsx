@@ -134,15 +134,21 @@ describe('STORE-02 professional profile in the native Open VSX detail route', ()
         await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(id, '1.0.0', expect.anything()));
     });
     it('resolves an old exact version outside the initially loaded catalog page', async () => {
-        const historical = { ...releases[0], registryRelease: { ...releases[0].registryRelease,
-            version: '0.8.0', publishedAt: '2025-01-01T12:00:00Z' } };
+        const historical = {
+            ...releases[0],
+            registryRelease: { ...releases[0].registryRelease, version: '0.8.0', publishedAt: '2025-01-01T12:00:00Z' }
+        };
         fetchMock.mockResolvedValue({
-            contract: 'blackwhi.store.fit.product.detail.v2', readOnly: true,
-            coverage: 'exact-release', product: historical, profileStatus: 'not-provided', profile: {}
+            contract: 'blackwhi.store.fit.product.detail.v2',
+            readOnly: true,
+            coverage: 'exact-release',
+            product: historical,
+            profileStatus: 'not-provided',
+            profile: {}
         } as unknown as FitProductDetail);
         renderPage(`/fit-package/${id}/versions/0.8.0`);
         expect(await screen.findByText(/its professional FIT-01 profile has not been/i)).toBeInTheDocument();
-        await waitFor(() => expect(screen.getByText('0.8.0 (exact version)')).toBeInTheDocument());
+        expect(await screen.findByText('0.8.0 (exact version)')).toBeInTheDocument();
         await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(id, '0.8.0', expect.anything()));
     });
     it('renders the professional FIT sections inside the native route, with the exact version', async () => {

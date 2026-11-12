@@ -13,9 +13,12 @@ const outRootDir = path.join(import.meta.dirname, 'dist');
 const liveFitEnabled = process.env.VITE_BLACKWHI_STORE_FIT_LIVE === '1';
 const springOrigin = process.env.BLACKWHI_STORE_SPRING_ORIGIN ?? '';
 const proxyEnabled = springOrigin.length > 0;
-if ((liveFitEnabled && !proxyEnabled) || (proxyEnabled &&
-    (!/^http:\/\/127\.0\.0\.1:(?:[1-9][0-9]{1,4})$/.test(springOrigin) ||
-        Number(springOrigin.split(':').at(-1)) > 65535))) {
+if (
+    (liveFitEnabled && !proxyEnabled) ||
+    (proxyEnabled &&
+        (!/^http:\/\/127\.0\.0\.1:(?:[1-9][0-9]{1,4})$/.test(springOrigin) ||
+            Number(springOrigin.split(':').at(-1)) > 65535))
+) {
     throw new Error('BLACKWHI_STORE_SPRING_ORIGIN must be an explicit loopback HTTP origin with a port');
 }
 const springProxy = {
@@ -29,19 +32,21 @@ export default defineConfig(() => ({
     server: {
         host: true,
         port: 3000,
-        ...(proxyEnabled ? {
-            proxy: {
-                // API requests stay on the original web origin, including FIT.
-                '/api/': springProxy,
-                // Spring's original account endpoint; avoid capturing SPA /user-settings.
-                '^/user(?:/|\\?|$)': springProxy,
-                // Original identity and administration endpoints.
-                '^/login-providers(?:/|\\?|$)': springProxy,
-                '^/login(?:/|\\?|$)': springProxy,
-                '^/logout(?:/|\\?|$)': springProxy,
-                '^/admin(?:/|\\?|$)': springProxy
-            }
-        } : {})
+        ...(proxyEnabled
+            ? {
+                  proxy: {
+                      // API requests stay on the original web origin, including FIT.
+                      '/api/': springProxy,
+                      // Spring's original account endpoint; avoid capturing SPA /user-settings.
+                      '^/user(?:/|\\?|$)': springProxy,
+                      // Original identity and administration endpoints.
+                      '^/login-providers(?:/|\\?|$)': springProxy,
+                      '^/login(?:/|\\?|$)': springProxy,
+                      '^/logout(?:/|\\?|$)': springProxy,
+                      '^/admin(?:/|\\?|$)': springProxy
+                  }
+              }
+            : {})
     },
     preview: {
         port: 3000
