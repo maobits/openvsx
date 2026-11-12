@@ -209,8 +209,12 @@ export const ExtensionCard = memo(
                         <RouteLink
                             ref={ref}
                             {...linkProps}
-                            to={to ?? (fitProduct ? `/fit-package/${encodeURIComponent(fitProduct.productId)}` :
-                                createRoute([ExtensionDetailRoutes.ROOT, extension!.namespace, extension!.name]))}
+                            to={
+                                to ??
+                                (fitProduct
+                                    ? `/fit-package/${encodeURIComponent(fitProduct.productId)}`
+                                    : createRoute([ExtensionDetailRoutes.ROOT, extension!.namespace, extension!.name]))
+                            }
                             state={linkState}
                             aria-label={title}
                             style={{ textDecoration: 'none', height: '100%', display: 'block', outline: 'none' }}>
@@ -250,9 +254,17 @@ export const ExtensionCard = memo(
                                         mb: '0.75rem'
                                     }}>
                                     {fitProduct ? (
-                                        <Box component='span' role='img' aria-label='FIT package' sx={{
-                                            fontWeight: 800, fontSize: '1.35rem', color: 'secondary.main'
-                                        }}>FIT</Box>
+                                        <Box
+                                            component='span'
+                                            role='img'
+                                            aria-label='FIT package'
+                                            sx={{
+                                                fontWeight: 800,
+                                                fontSize: '1.35rem',
+                                                color: 'secondary.main'
+                                            }}>
+                                            FIT
+                                        </Box>
                                     ) : (
                                         <ExtensionIcon
                                             extension={extension!}
@@ -393,22 +405,25 @@ export const ExtensionCard = memo(
                                         overflow: 'hidden',
                                         fontSize: '0.75rem'
                                     }}>
-                                    {footerStart ?? (fitProduct ? <TagChip accent>FIT package</TagChip> : (
-                                        <CardFooterRating>
-                                            {reviewCount > 0 ? (
-                                                <>
-                                                    <Box component='span' sx={{ fontSize: '0.6875rem' }}>
-                                                        {formatRating(extension?.averageRating ?? 0)}
-                                                    </Box>
-                                                    <Box
-                                                        component='span'
-                                                        sx={{ fontSize: '0.6875rem', color: 'text.disabled' }}>
-                                                        ({formatCompactNumber(reviewCount)})
-                                                    </Box>
-                                                </>
-                                            ) : null}
-                                        </CardFooterRating>
-                                    ))}
+                                    {footerStart ??
+                                        (fitProduct ? (
+                                            <TagChip accent>FIT package</TagChip>
+                                        ) : (
+                                            <CardFooterRating>
+                                                {reviewCount > 0 ? (
+                                                    <>
+                                                        <Box component='span' sx={{ fontSize: '0.6875rem' }}>
+                                                            {formatRating(extension?.averageRating ?? 0)}
+                                                        </Box>
+                                                        <Box
+                                                            component='span'
+                                                            sx={{ fontSize: '0.6875rem', color: 'text.disabled' }}>
+                                                            ({formatCompactNumber(reviewCount)})
+                                                        </Box>
+                                                    </>
+                                                ) : null}
+                                            </CardFooterRating>
+                                        ))}
                                     {!fitProduct && downloadCount !== '0' && (
                                         <Box
                                             component='span'

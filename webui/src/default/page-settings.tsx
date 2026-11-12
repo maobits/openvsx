@@ -35,12 +35,21 @@ export default function createPageSettings(prefersDarkMode: boolean, serverUrl: 
             // A bare anchor would leak the browser's link colors into the wordmark.
             style={{ display: 'flex', color: 'inherit' }}>
             <Box sx={{ display: 'flex', alignItems: 'baseline', gap: '0.55rem' }}>
-                <Typography component='span' sx={{ fontFamily: 'Georgia, serif', fontWeight: 800,
-                    fontSize: '1.65rem', letterSpacing: '-0.06em', lineHeight: 1, color: 'inherit' }}>
+                <Typography
+                    component='span'
+                    sx={{
+                        fontFamily: 'Georgia, serif',
+                        fontWeight: 800,
+                        fontSize: '1.65rem',
+                        letterSpacing: '-0.06em',
+                        lineHeight: 1,
+                        color: 'inherit'
+                    }}>
                     BlackWhi
                 </Typography>
-                <Typography component='span' sx={{ fontWeight: 700, fontSize: '0.625rem',
-                    letterSpacing: '0.18em', color: 'inherit' }}>
+                <Typography
+                    component='span'
+                    sx={{ fontWeight: 700, fontSize: '0.625rem', letterSpacing: '0.18em', color: 'inherit' }}>
                     STORE
                 </Typography>
             </Box>
@@ -49,10 +58,22 @@ export default function createPageSettings(prefersDarkMode: boolean, serverUrl: 
 
     const footer: PageSettings['elements']['footer'] = {
         brand: {
-            logo: <Box component='span' sx={{ fontFamily: 'Georgia, serif', fontWeight: 800,
-                letterSpacing: '-0.06em', fontSize: '1.5rem', lineHeight: 1 }}>BW</Box>,
+            logo: (
+                <Box
+                    component='span'
+                    sx={{
+                        fontFamily: 'Georgia, serif',
+                        fontWeight: 800,
+                        letterSpacing: '-0.06em',
+                        fontSize: '1.5rem',
+                        lineHeight: 1
+                    }}>
+                    BW
+                </Box>
+            ),
             name: 'BlackWhi Store',
-            description: 'FIT package catalog built on the Eclipse Open VSX open-source codebase (EPL-2.0). Upstream attribution and notices are retained.'
+            description:
+                'FIT package catalog built on the Eclipse Open VSX open-source codebase (EPL-2.0). Upstream attribution and notices are retained.'
         },
         columns: [
             {

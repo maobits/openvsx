@@ -42,13 +42,17 @@ export const Main: FunctionComponent<MainProps> = props => (
     </QueryClientProvider>
 );
 
-
 // Historical FIT preview URLs resolve to the native Open VSX detail page.
 // This is navigation only, not a second storefront or a second data authority.
 const LegacyFitProductRedirect = () => {
     const { packageId, version } = useParams<{ packageId: string; version: string }>();
     if (!packageId || !version) return null;
-    return <Navigate replace to={`/fit-package/${encodeURIComponent(packageId)}/versions/${encodeURIComponent(version)}`} />;
+    return (
+        <Navigate
+            replace
+            to={`/fit-package/${encodeURIComponent(packageId)}/versions/${encodeURIComponent(version)}`}
+        />
+    );
 };
 
 const MainContent: FunctionComponent<MainProps> = props => {
@@ -147,10 +151,11 @@ const MainContent: FunctionComponent<MainProps> = props => {
                     />
                     {FIT_NATIVE_ENABLED && (
                         <>
-                            <Route path='/blackwhi/fit'
-                                element={<Navigate replace to='/search?category=FIT%20Packages' />} />
-                            <Route path='/blackwhi/fit/:packageId/:version'
-                                element={<LegacyFitProductRedirect />} />
+                            <Route
+                                path='/blackwhi/fit'
+                                element={<Navigate replace to='/search?category=FIT%20Packages' />}
+                            />
+                            <Route path='/blackwhi/fit/:packageId/:version' element={<LegacyFitProductRedirect />} />
                         </>
                     )}
                     <Route path='*' element={<AppLayout userLoading={userLoading} />} />

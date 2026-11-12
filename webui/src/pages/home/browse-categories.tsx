@@ -35,7 +35,8 @@ export const BrowseCategories: FunctionComponent<BrowseCategoriesProps> = props 
     const homeCategories = useHomeCategories();
     const { search } = useSearch();
     const categories: Array<ExtensionCategory | typeof FIT_CATEGORY> = FIT_NATIVE_ENABLED
-        ? [...(props.categories ?? homeCategories), FIT_CATEGORY] : (props.categories ?? homeCategories);
+        ? [...(props.categories ?? homeCategories), FIT_CATEGORY]
+        : (props.categories ?? homeCategories);
     const onSelect = (category: ExtensionCategory | typeof FIT_CATEGORY) => {
         if (props.onSelect && category !== FIT_CATEGORY) props.onSelect(category);
         else search({ query: '', category });

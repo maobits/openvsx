@@ -236,8 +236,17 @@ export const AppNavbar: FunctionComponent = () => {
                             // Keeps the reversed mark off the browser's link color.
                             style={{ display: 'flex', textDecoration: 'none', color: 'inherit' }}>
                             {/* Same mark height as the full toolbar logo */}
-                            <Box component='span' sx={{ fontFamily: 'Georgia, serif', fontWeight: 800,
-                                fontSize: '1.5rem', letterSpacing: '-0.06em', color: 'inherit' }}>BW</Box>
+                            <Box
+                                component='span'
+                                sx={{
+                                    fontFamily: 'Georgia, serif',
+                                    fontWeight: 800,
+                                    fontSize: '1.5rem',
+                                    letterSpacing: '-0.06em',
+                                    color: 'inherit'
+                                }}>
+                                BW
+                            </Box>
                         </RouteLink>
                     </Box>
                     {/* Full logo — desktop always, mobile only while the nav search field is hidden. */}

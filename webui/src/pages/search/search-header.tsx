@@ -71,7 +71,8 @@ export const SearchHeader: FunctionComponent<SearchHeaderProps> = props => {
                     {title}
                 </Typography>
                 <Typography sx={{ fontSize: '0.8125rem', color: 'text.disabled', mt: '0.3125rem' }}>
-                    {props.resultNumber.toLocaleString()} {props.nativeFitEnabled && props.category === FIT_CATEGORY
+                    {props.resultNumber.toLocaleString()}{' '}
+                    {props.nativeFitEnabled && props.category === FIT_CATEGORY
                         ? 'FIT packages from loaded pages (search not yet global)'
                         : 'results'}
                 </Typography>

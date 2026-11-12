@@ -20,7 +20,12 @@ import { ExtensionFilter } from '../extension-registry-service';
 import { useExtensionResultsCursor } from '../hooks/use-extension-results-cursor';
 import { useInfiniteSearch } from '../hooks/use-infinite-search';
 import { useInView } from '../hooks/use-in-view';
-import { FIT_CATEGORY, FIT_NATIVE_ENABLED, filterNativeFitProducts, useNativeFitCatalog } from '../blackwhi/fit/native-fit-catalog';
+import {
+    FIT_CATEGORY,
+    FIT_NATIVE_ENABLED,
+    filterNativeFitProducts,
+    useNativeFitCatalog
+} from '../blackwhi/fit/native-fit-catalog';
 import { Box, Button, Typography } from '@mui/material';
 
 export const ExtensionList: FunctionComponent<ExtensionListProps> = ({ filter, onUpdate }) => {
@@ -37,9 +42,15 @@ export const ExtensionList: FunctionComponent<ExtensionListProps> = ({ filter, o
     } = useInfiniteSearch(filter);
     const native = useNativeFitCatalog();
     const fitOnly = FIT_NATIVE_ENABLED && filter.category === FIT_CATEGORY;
-    const fitProducts = FIT_NATIVE_ENABLED ? filterNativeFitProducts(
-        native.data?.products ?? [], filter.query, filter.category, filter.sortBy, filter.sortOrder
-    ) : [];
+    const fitProducts = FIT_NATIVE_ENABLED
+        ? filterNativeFitProducts(
+              native.data?.products ?? [],
+              filter.query,
+              filter.category,
+              filter.sortBy,
+              filter.sortOrder
+          )
+        : [];
     const sentinelRef = useRef<HTMLDivElement>(null);
     const nearEnd = useInView(sentinelRef, { once: false, rootMargin: '200px', enabled: hasNextPage });
 
@@ -58,8 +69,8 @@ export const ExtensionList: FunctionComponent<ExtensionListProps> = ({ filter, o
     }, [filter.query, filter.category, filter.sortBy, filter.sortOrder, grid.reset]);
 
     const pageSize = filter.size;
-    const loading = (!fitOnly && (isLoading || isFetchingNextPage)) ||
-        (FIT_NATIVE_ENABLED && native.isLoading && !data);
+    const loading =
+        (!fitOnly && (isLoading || isFetchingNextPage)) || (FIT_NATIVE_ENABLED && native.isLoading && !data);
     // Load failures show inline rather than in the error dialog; a failed refetch keeps its results.
     const firstPageFailed = !fitOnly && isError && !data && !isFetching;
     const nextPageFailed = isFetchNextPageError && !isFetching;
@@ -102,7 +113,9 @@ export const ExtensionList: FunctionComponent<ExtensionListProps> = ({ filter, o
             <ExtensionGrid {...grid.containerProps}>{cards}</ExtensionGrid>
             {FIT_NATIVE_ENABLED && native.isError && (
                 <Box role='status' sx={{ mt: 2, color: 'warningAccent' }}>
-                    <Typography variant='body2'>FIT Registry temporarily unavailable; extension results are unaffected.</Typography>
+                    <Typography variant='body2'>
+                        FIT Registry temporarily unavailable; extension results are unaffected.
+                    </Typography>
                 </Box>
             )}
             {firstPageFailed && (
@@ -124,7 +137,9 @@ export const ExtensionList: FunctionComponent<ExtensionListProps> = ({ filter, o
             )}
             {FIT_NATIVE_ENABLED && native.hasNextPage && (
                 <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-                    <Button variant='outlined' disabled={native.isFetchingNextPage}
+                    <Button
+                        variant='outlined'
+                        disabled={native.isFetchingNextPage}
                         onClick={() => void native.fetchNextPage()}>
                         {native.isFetchingNextPage ? 'Loading FIT releases…' : 'Load more FIT packages'}
                     </Button>
@@ -134,8 +149,10 @@ export const ExtensionList: FunctionComponent<ExtensionListProps> = ({ filter, o
                 </Box>
             )}
             {FIT_NATIVE_ENABLED && native.isFetchNextPageError && (
-                <ExtensionListLoadError message='Could not load the next FIT page.'
-                    onRetry={() => void native.fetchNextPage()} />
+                <ExtensionListLoadError
+                    message='Could not load the next FIT page.'
+                    onRetry={() => void native.fetchNextPage()}
+                />
             )}
             <div ref={sentinelRef} />
         </div>

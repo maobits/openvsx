@@ -16,7 +16,10 @@ const product = {
     displayName: 'Validation Core',
     registryRelease: {
         contract: 'blackwhi.fit.registry.catalog.v1',
-        packageId: id, version, sha256: 'a'.repeat(64), state: 'published',
+        packageId: id,
+        version,
+        sha256: 'a'.repeat(64),
+        state: 'published',
         publishedAt: '2026-11-12T01:52:22.870Z'
     }
 };
@@ -34,7 +37,9 @@ const mock = vi.mocked(fetchFitProductDetail);
 const route = `/fit-package/${id}/versions/${version}`;
 function show() {
     return renderWithProviders(
-        <Routes><Route path='/fit-package/:packageId/versions/:version' element={<FitPackageDetail />} /></Routes>,
+        <Routes>
+            <Route path='/fit-package/:packageId/versions/:version' element={<FitPackageDetail />} />
+        </Routes>,
         { route }
     );
 }
@@ -42,20 +47,31 @@ afterEach(() => mock.mockReset());
 
 describe('Published FIT archive download in native Store', () => {
     it('allows obtaining published artifact despite pending editorial profile', async () => {
-        mock.mockResolvedValue({ contract: 'blackwhi.store.fit.product.detail.v2', readOnly: true,
-            coverage: 'exact-release', product, profileStatus: 'not-provided', profile: {} } as FitProductDetail);
+        mock.mockResolvedValue({
+            contract: 'blackwhi.store.fit.product.detail.v2',
+            readOnly: true,
+            coverage: 'exact-release',
+            product,
+            profileStatus: 'not-provided',
+            profile: {}
+        } as FitProductDetail);
         show();
         const download = await screen.findByRole('link', { name: `Download ${id} version ${version} FIT package` });
-        expect(download).toHaveAttribute('href',
-            `/api/blackwhi/fit/v2/products/${id}/versions/${version}/download`);
+        expect(download).toHaveAttribute('href', `/api/blackwhi/fit/v2/products/${id}/versions/${version}/download`);
         expect(screen.getByText(/its professional FIT-01 profile has not been supplied/i)).toBeInTheDocument();
     });
     it('does not offer download when exact Registry SHA does not match catalog release', async () => {
-        mock.mockResolvedValue({ contract: 'blackwhi.store.fit.product.detail.v2', readOnly: true,
-            coverage: 'exact-release', product: {
+        mock.mockResolvedValue({
+            contract: 'blackwhi.store.fit.product.detail.v2',
+            readOnly: true,
+            coverage: 'exact-release',
+            product: {
                 ...product,
                 registryRelease: { ...product.registryRelease, sha256: 'b'.repeat(64) }
-            }, profileStatus: 'not-provided', profile: {} } as FitProductDetail);
+            },
+            profileStatus: 'not-provided',
+            profile: {}
+        } as FitProductDetail);
         show();
         await screen.findByText(/Store and Registry release SHA-256 values do not match/i);
         expect(screen.queryByRole('link', { name: /Download .* FIT package/i })).not.toBeInTheDocument();
