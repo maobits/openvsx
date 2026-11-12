@@ -1,0 +1,95 @@
+# SPDX-License-Identifier: EPL-2.0
+# BlackWhi-specific read-only checks. Keep Eclipse Open VSX upstream CI intact.
+name: BlackWhi Store - FIT Quality Gates
+
+'on':
+  pull_request:
+    branches:
+      - blackwhi/develop
+      - 'release/blackwhi-store/**'
+  push:
+    branches:
+      - blackwhi/develop
+
+permissions:
+  contents: read
+
+concurrency:
+  group: blackwhi-store-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fit-contracts:
+    name: FIT profile contracts and repository hygiene
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Python version
+        run: python3 --version
+      - name: Reject versioned Python bytecode
+        shell: bash
+        run: |
+          python3 - <<'PYTHON'
+          import subprocess
+          paths = subprocess.check_output(['git', 'ls-files', '-z', '--', 'blackwhi/']).split(b'\0')
+          bad = [p.decode('utf-8', 'replace') for p in paths if p and
+                 (p.endswith(b'.pyc') or b'/__pycache__/' in p)]
+          if bad:
+              raise SystemExit('Tracked Python bytecode forbidden: ' + ', '.join(bad))
+          print('[PASS] No tracked Python bytecode')
+          PYTHON
+      - name: Validate FIT product profile contracts
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: >-
+          python3 -B -m unittest discover
+          -s blackwhi/tests
+          -p 'test_fit_product_profile*contract.py' -v
+
+  spring-download:
+    name: Spring FIT download API (JDK 25)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Temurin JDK 25
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '25'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.3.0
+      - name: Run Spring FIT download regression tests
+        run: >-
+          server/gradlew --no-daemon -p server test
+          --tests org.eclipse.openvsx.blackwhi.integration.FitPublishedPackageDownloadApiTest
+
+  react-preview-download:
+    name: Native FIT preview and download (Node 24)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node.js 24
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.x
+      - name: Install the repository-pinned Yarn dependencies
+        working-directory: webui
+        run: node .yarn/releases/yarn-4.18.1.cjs install --immutable
+      - name: Run native FIT preview and download regression tests
+        working-directory: webui
+        run: >-
+          node .yarn/releases/yarn-4.18.1.cjs test
+          test/unit/blackwhi/local-editorial-preview.spec.ts
+          test/unit/blackwhi/fit-package-download.spec.tsx
