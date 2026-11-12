@@ -19,9 +19,11 @@ export interface FitAsset { path: string; sha256: string; bytes: number }
 export interface FitLink { kind: string; label: string; url: string }
 export interface FitProfile {
     contract: 'blackwhi.fit.product.profile.v1' | 'blackwhi.fit.product.profile.v2';
-    editorial?: { state: 'approved'; fieldStatus: Record<'publisher' | 'links' | 'support' | 'license' | 'icon', string>;
-        rightsReview: { reviewer: string; reviewedDate: string; publisherAuthorized: true;
-            licenseTextReviewed: true; redistributionRightsConfirmed: true } };
+    // Draft type supports browser-only local preview; public decodeFitProductDetail still rejects non-approved v2.
+    editorial?: { state: 'approved' | 'review-required';
+        fieldStatus: Record<'publisher' | 'links' | 'support' | 'license' | 'icon', string>;
+        rightsReview: { reviewer: string | null; reviewedDate: string | null; publisherAuthorized: boolean;
+            licenseTextReviewed: boolean; redistributionRightsConfirmed: boolean } };
     release: { packageId: string; version: string; artifactSha256: string };
     identity: { displayName: string; publisherName: string; publisherNamespace: string; productType: string };
     overview: { summary: string; description: string; features: string[] };

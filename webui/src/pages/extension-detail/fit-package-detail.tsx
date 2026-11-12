@@ -5,7 +5,7 @@
  * BlackWhi STORE-02.1 - Professional FIT detail inside the native Open VSX UI.
  * Registry publication is not a signature verification or installation grant.
  ********************************************************************************/
-import { FunctionComponent, ReactNode, useEffect, useMemo, useState } from 'react';
+import { FunctionComponent, ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { Link as RouteLink, useNavigate, useParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { Alert, Box, Button, Chip, Divider, Link, MenuItem, Paper, Select, Stack, Typography } from '@mui/material';
@@ -23,6 +23,13 @@ import {
     type FitLink,
     type FitProfile
 } from '../../blackwhi/fit/product-detail';
+
+import {
+    loadLocalFitEditorialPreview,
+    localFitPreviewEnabled,
+    releaseLocalFitPreview,
+    type LocalFitEditorialPreview
+} from '../../blackwhi/fit/local-editorial-preview';
 
 const md = new MarkdownIt({ html: false, linkify: false, breaks: true });
 const DOCS = [
@@ -112,7 +119,9 @@ const ExternalLinks = ({ links }: { links: FitLink[] }) =>
     );
 
 /** Documents are retrieved via Spring's bounded, hash-checked resource endpoint. */
-const NativeFitDocuments = ({ profile, id, version }: { profile: FitProfile; id: string; version: string }) => {
+const NativeFitDocuments = ({ profile, id, version, preview }: {
+    profile: FitProfile; id: string; version: string; preview?: LocalFitEditorialPreview
+}) => {
     const available = DOCS.filter(([name]) => !!profile.documentation[name]);
     const [tab, setTab] = useState<DocKind>('readme');
     const asset: FitAsset | null | undefined = profile.documentation[tab];
@@ -122,7 +131,11 @@ const NativeFitDocuments = ({ profile, id, version }: { profile: FitProfile; id:
         const controller = new AbortController();
         setText('');
         setStatus('loading');
-        if (asset) {
+        if (asset && preview) {
+            const localText = preview.documents[asset.path];
+            if (localText === undefined) setStatus('error');
+            else { setText(localText); setStatus('ready'); }
+        } else if (asset) {
             fetchFitTextResource(id, version, asset, controller.signal).then(
                 value => {
                     if (!controller.signal.aborted) {
@@ -136,7 +149,7 @@ const NativeFitDocuments = ({ profile, id, version }: { profile: FitProfile; id:
             );
         }
         return () => controller.abort();
-    }, [id, version, asset?.path]);
+    }, [id, version, asset?.path, preview]);
     const html = useMemo(() => DOMPurify.sanitize(md.render(text)), [text]);
     return (
         <Stack spacing={2}>
@@ -180,7 +193,8 @@ const NativeFitProfile = ({
     version,
     releaseSha,
     publishedAt,
-    state
+    state,
+    preview
 }: {
     profile: FitProfile;
     packageId: string;
@@ -188,8 +202,11 @@ const NativeFitProfile = ({
     releaseSha: string;
     publishedAt: string;
     state: string;
+    preview?: LocalFitEditorialPreview;
 }) => {
-    const resource = (asset: FitAsset) => fitResourceEndpoint(packageId, version, asset.path);
+    const resource = (asset: FitAsset) => preview
+        ? (preview.assetUrls[asset.path] ?? '')
+        : fitResourceEndpoint(packageId, version, asset.path);
     const sectionLabels: Array<[string, string]> = [
         ['overview', 'Overview'],
         ['categories', 'Categories'],
@@ -298,6 +315,7 @@ const NativeFitProfile = ({
                         profile={profile}
                         id={packageId}
                         version={version}
+                        preview={preview}
                     />
                 </Section>
                 <Section id='fit-api' title='API reference'>
@@ -357,6 +375,11 @@ const NativeFitProfile = ({
                                     <Typography fontWeight={700}>
                                         {dep.id}@{dep.version}
                                     </Typography>
+                                    {dep.id === packageId && dep.version === version && (
+                                        <Typography variant='body2' color='text.secondary'>
+                                            Bundled library in this FIT-03 program; not a separate remote dependency edge.
+                                        </Typography>
+                                    )}
                                     <Typography
                                         component='code'
                                         variant='body2'
@@ -511,6 +534,21 @@ export const FitPackageDetail: FunctionComponent = () => {
     const { packageId, version: requestedVersion } = useParams<{ packageId: string; version?: string }>();
     const navigate = useNavigate();
     const catalog = useNativeFitCatalog();
+    // Opt-in browser-only local draft; never changes the Store API's approval status.
+    const previewRequested = localFitPreviewEnabled();
+    const [localPreview, setLocalPreview] = useState<LocalFitEditorialPreview | null>(null);
+    const [previewBusy, setPreviewBusy] = useState(false);
+    const [previewError, setPreviewError] = useState('');
+    const previewGeneration = useRef(0);
+    useEffect(() => () => {
+        if (localPreview) releaseLocalFitPreview(localPreview);
+    }, [localPreview]);
+    useEffect(() => {
+        previewGeneration.current += 1;
+        setLocalPreview(null);
+        setPreviewError('');
+        setPreviewBusy(false);
+    }, [packageId, requestedVersion]);
     const releases = useMemo(
         () =>
             (catalog.data?.products ?? [])
@@ -554,10 +592,36 @@ export const FitPackageDetail: FunctionComponent = () => {
     const release = selected.registryRelease;
     const responseMatchesRegistry = !details.data || !selectedFromCatalog ||
         details.data.product.registryRelease.sha256 === selectedFromCatalog.registryRelease.sha256;
-    const profile =
+    const activePreview = previewRequested && responseMatchesRegistry &&
+        details.data?.profileStatus === 'not-provided' &&
+        localPreview?.profile.release.packageId === packageId &&
+        localPreview.profile.release.version === selectedVersion &&
+        localPreview.profile.release.artifactSha256 === release.sha256 ? localPreview : undefined;
+    const profile = activePreview?.profile ?? (
         responseMatchesRegistry && details.data?.profileStatus === 'complete'
             ? (details.data.profile as FitProfile)
-            : undefined;
+            : undefined);
+    const previewSelect = async (files: FileList | null): Promise<void> => {
+        if (!files || !selected || !previewRequested) return;
+        const generation = ++previewGeneration.current;
+        setLocalPreview(null);
+        setPreviewError('');
+        setPreviewBusy(true);
+        try {
+            const checked = await loadLocalFitEditorialPreview(files, selected);
+            if (generation !== previewGeneration.current) {
+                releaseLocalFitPreview(checked);
+                return;
+            }
+            setLocalPreview(checked);
+        } catch (error) {
+            if (generation === previewGeneration.current) {
+                setPreviewError(error instanceof Error ? error.message : 'Invalid local editorial folder.');
+            }
+        } finally {
+            if (generation === previewGeneration.current) setPreviewBusy(false);
+        }
+    };
     return (
         <PageContainer component='main'>
             <Stack spacing={3}>
@@ -607,6 +671,19 @@ export const FitPackageDetail: FunctionComponent = () => {
                             <Typography color='warning.main'>Deprecated release</Typography>
                         )}
                         {profile && <Typography sx={{ mt: 1.5 }}>{profile.overview.summary}</Typography>}
+                        {details.data && responseMatchesRegistry &&
+                            ['published', 'deprecated'].includes(release.state) && (
+                                <Stack direction='row' spacing={1} sx={{ mt: 2 }} alignItems='center' flexWrap='wrap'>
+                                    <Button variant='contained' component='a'
+                                        href={`/api/blackwhi/fit/v2/products/${encodeURIComponent(packageId)}/versions/${encodeURIComponent(selectedVersion)}/download`}
+                                        aria-label={`Download ${packageId} version ${selectedVersion} FIT package`}>
+                                        Download .fitpkg
+                                    </Button>
+                                    <Typography variant='caption' color='text.secondary'>
+                                        Published Registry archive · independent verification required before installation.
+                                    </Typography>
+                                </Stack>
+                            )}
                     </Box>
                     {releases.length > 1 && (
                         <Stack spacing={0.5} sx={{ minWidth: 130 }}>
@@ -635,8 +712,9 @@ export const FitPackageDetail: FunctionComponent = () => {
                     )}
                 </Stack>
                 <Alert severity='info' icon={false}>
-                    Read-only public Registry information and optional SHA-256-bound editorial resources. This page does
-                    not independently verify a signature or permit execution, download or installation.
+                    Public Registry release information and optional SHA-256-bound editorial resources. Downloading a
+                    published .fitpkg does not independently verify its Ed25519 signature, approve its editorial profile,
+                    execute code or authorize installation. Use a pinned trust policy before running packages.
                 </Alert>
                 {details.isLoading && <Typography role='status'>Loading exact-version product details…</Typography>}
                 {details.isError && (
@@ -652,7 +730,36 @@ export const FitPackageDetail: FunctionComponent = () => {
                         The Store and Registry release SHA-256 values do not match. No editorial details are displayed.
                     </Alert>
                 )}
-                {responseMatchesRegistry && details.data && details.data.profileStatus === 'not-provided' && (
+                {previewRequested && responseMatchesRegistry && details.data?.profileStatus === 'not-provided' && (
+                    <Paper elevation={0} sx={theme => ({ ...cardSurface(theme), p: 3 })}>
+                        <Alert severity='warning' role='note' sx={{ mb: 2 }}>
+                            <strong>LOCAL EDITORIAL DRAFT — REVIEW REQUIRED — NOT APPROVED.</strong>
+                            {' '}This preview reads files only in your browser. No files are uploaded,
+                            no Store publication or Registry rights are changed, and license/redistribution
+                            claims have not received an independent editorial review.
+                        </Alert>
+                        <Typography sx={{ mb: 1 }}>
+                            Select the local editorial candidate folder containing <code>fit-product.json</code> and
+                            <code> docs/</code>. The browser checks the exact Registry artifact SHA-256 and the
+                            SHA-256 of every displayed document/image before showing the native product sections.
+                        </Typography>
+                        <input type='file' multiple aria-label='Select local FIT editorial folder'
+                            ref={element => {
+                                if (element) {
+                                    element.setAttribute('webkitdirectory', '');
+                                    element.setAttribute('directory', '');
+                                }
+                            }}
+                            onChange={event => { void previewSelect(event.currentTarget.files); }} />
+                        {previewBusy && <Typography role='status'>Verifying local editorial resources…</Typography>}
+                        {previewError && <Alert severity='error' role='alert' sx={{ mt: 2 }}>{previewError}</Alert>}
+                        {activePreview && <Alert severity='success' sx={{ mt: 2 }}>
+                            Local files matched the published Registry digest and their declared document hashes.
+                            This is still an unapproved draft, not a public Store profile.
+                        </Alert>}
+                    </Paper>
+                )}
+                {responseMatchesRegistry && details.data && details.data.profileStatus === 'not-provided' && !activePreview && (
                     <Section id='fit-registry' title='Registry information'>
                         <Typography sx={{ mb: 2 }}>
                             The release is published, but its professional FIT-01 profile has not been supplied. No
@@ -677,6 +784,7 @@ export const FitPackageDetail: FunctionComponent = () => {
                         releaseSha={release.sha256}
                         publishedAt={release.publishedAt}
                         state={release.state}
+                        preview={activePreview}
                     />
                 )}
             </Stack>
