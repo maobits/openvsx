@@ -1,0 +1,71 @@
+# SPDX-License-Identifier: EPL-2.0
+# BlackWhi release-oriented checks. Retain the native Open VSX workflows.
+# This workflow never deploys, publishes artifacts, or changes Registry state.
+name: BlackWhi Store - Release Build Gates
+
+'on':
+  pull_request:
+    branches:
+      - blackwhi/develop
+      - 'release/blackwhi-store/**'
+  push:
+    branches:
+      - blackwhi/develop
+
+permissions:
+  contents: read
+
+concurrency:
+  group: blackwhi-store-release-build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native-webui:
+    name: TypeScript, ESLint, FIT tests and production WebUI
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node.js 24
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.x
+      - name: Install immutable repository-pinned dependencies
+        working-directory: webui
+        run: node .yarn/releases/yarn-4.18.1.cjs install --immutable
+      - name: TypeScript and ESLint
+        working-directory: webui
+        run: node .yarn/releases/yarn-4.18.1.cjs build
+      - name: Isolated FIT regression tests
+        working-directory: webui
+        run: >-
+          node .yarn/releases/yarn-4.18.1.cjs vitest run
+          --config vitest.blackwhi.config.mts
+          --reporter=dot
+      - name: Build native production frontend
+        working-directory: webui
+        run: node .yarn/releases/yarn-4.18.1.cjs build:default
+
+  spring-assemble:
+    name: Spring Boot production assembly (JDK 25)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Temurin JDK 25
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '25'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.3.0
+      - name: Assemble server without publishing
+        run: >-
+          server/gradlew --no-daemon --max-workers=2
+          -p server assemble
