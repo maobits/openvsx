@@ -16,6 +16,7 @@ import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query';
 import { MainContext } from '../context';
 import { SearchResult } from '../extension-registry-types';
 import { ExtensionFilter } from '../extension-registry-service';
+import { FIT_CATEGORY, FIT_NATIVE_ENABLED } from '../blackwhi/fit/native-fit-catalog';
 
 /** The filter fields that identify a result set; `offset` is driven by the pages. */
 export type SearchQuery = Omit<ExtensionFilter, 'offset'>;
@@ -45,6 +46,7 @@ export const useInfiniteSearch = (filter: ExtensionFilter) => {
                 sortOrder,
                 offset: pageParam
             }),
+        enabled: !(FIT_NATIVE_ENABLED && category === FIT_CATEGORY),
         initialPageParam: 0,
         getNextPageParam: (lastPage, allPages) => {
             const loaded = allPages.reduce((sum, page) => sum + page.extensions.length, 0);

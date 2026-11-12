@@ -12,6 +12,8 @@
  ********************************************************************************/
 
 import { FunctionComponent } from 'react';
+import CodeIcon from '@mui/icons-material/Code';
+import { FIT_CATEGORY, FIT_NATIVE_ENABLED } from '../../blackwhi/fit/native-fit-catalog';
 import { Box, Container } from '@mui/material';
 import { ExtensionCategory } from '../../extension-registry-types';
 import { CATEGORY_ICONS, DefaultCategoryIcon } from '../../components/categories';
@@ -32,8 +34,12 @@ export interface BrowseCategoriesProps {
 export const BrowseCategories: FunctionComponent<BrowseCategoriesProps> = props => {
     const homeCategories = useHomeCategories();
     const { search } = useSearch();
-    const categories = props.categories ?? homeCategories;
-    const onSelect = props.onSelect ?? ((category: ExtensionCategory) => search({ query: '', category }));
+    const categories: Array<ExtensionCategory | typeof FIT_CATEGORY> = FIT_NATIVE_ENABLED
+        ? [...(props.categories ?? homeCategories), FIT_CATEGORY] : (props.categories ?? homeCategories);
+    const onSelect = (category: ExtensionCategory | typeof FIT_CATEGORY) => {
+        if (props.onSelect && category !== FIT_CATEGORY) props.onSelect(category);
+        else search({ query: '', category });
+    };
     if (categories.length === 0) {
         return null;
     }
@@ -56,7 +62,7 @@ export const BrowseCategories: FunctionComponent<BrowseCategoriesProps> = props 
                     <CategoryPill
                         key={cat}
                         label={cat}
-                        icon={CATEGORY_ICONS[cat] ?? DefaultCategoryIcon}
+                        icon={cat === FIT_CATEGORY ? CodeIcon : (CATEGORY_ICONS[cat] ?? DefaultCategoryIcon)}
                         onClick={() => onSelect(cat)}
                     />
                 ))}
@@ -72,7 +78,7 @@ export const BrowseCategories: FunctionComponent<BrowseCategoriesProps> = props 
                     <CategoryCard
                         key={cat}
                         label={cat}
-                        icon={CATEGORY_ICONS[cat] ?? DefaultCategoryIcon}
+                        icon={cat === FIT_CATEGORY ? CodeIcon : (CATEGORY_ICONS[cat] ?? DefaultCategoryIcon)}
                         onClick={() => onSelect(cat)}
                     />
                 ))}

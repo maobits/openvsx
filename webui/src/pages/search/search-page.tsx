@@ -12,6 +12,8 @@
  ********************************************************************************/
 
 import { FunctionComponent, useState } from 'react';
+import CodeIcon from '@mui/icons-material/Code';
+import { FIT_CATEGORY, FIT_NATIVE_ENABLED } from '../../blackwhi/fit/native-fit-catalog';
 import { Box } from '@mui/material';
 import { SortBy, SortOrder } from '../../extension-registry-types';
 import { ExtensionCategory } from '../../extension-registry-types';
@@ -30,6 +32,10 @@ export const SearchPage: FunctionComponent = () => {
     const { filter, search } = useSearch();
     const { query: searchQuery, category, sortBy, sortOrder } = filter;
     const categories = useCategories();
+    const nativeCategories: Array<ExtensionCategory | typeof FIT_CATEGORY> = FIT_NATIVE_ENABLED
+        ? [...categories, FIT_CATEGORY] : categories;
+    const iconFor = (cat: ExtensionCategory | typeof FIT_CATEGORY | '') =>
+        cat === FIT_CATEGORY ? CodeIcon : cat ? CATEGORY_ICONS[cat] : DefaultCategoryIcon;
 
     const [resultNumber, setResultNumber] = useState(0);
 
@@ -39,7 +45,7 @@ export const SearchPage: FunctionComponent = () => {
         // layout's leftover space keeps the seam continuous on short result sets too.
         <PageContainer flushTop flushBottom sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
             {/* Mobile category pills — outside the flex row so negative-margin bleed isn't clipped */}
-            {categories.length > 0 && (
+            {nativeCategories.length > 0 && (
                 <Box
                     sx={{
                         display: { xs: 'flex', md: 'none' },
@@ -53,8 +59,8 @@ export const SearchPage: FunctionComponent = () => {
                         '&::-webkit-scrollbar': { display: 'none' },
                         scrollbarWidth: 'none'
                     }}>
-                    {(['', ...categories] as Array<ExtensionCategory | ''>).map(cat => {
-                        const Icon = cat ? CATEGORY_ICONS[cat] : DefaultCategoryIcon;
+                    {(['', ...nativeCategories] as Array<ExtensionCategory | typeof FIT_CATEGORY | ''>).map(cat => {
+                        const Icon = iconFor(cat);
                         return (
                             <CategoryPill
                                 key={cat || '_all'}
@@ -91,8 +97,8 @@ export const SearchPage: FunctionComponent = () => {
                         zIndex: 50
                     }}>
                     <Eyebrow sx={{ mb: '0.625rem', px: '0.625rem' }}>Categories</Eyebrow>
-                    {(['', ...categories] as Array<ExtensionCategory | ''>).map(cat => {
-                        const Icon = cat ? CATEGORY_ICONS[cat] : DefaultCategoryIcon;
+                    {(['', ...nativeCategories] as Array<ExtensionCategory | typeof FIT_CATEGORY | ''>).map(cat => {
+                        const Icon = iconFor(cat);
                         return (
                             <CategoryListItem
                                 key={cat || '_all'}
@@ -123,6 +129,7 @@ export const SearchPage: FunctionComponent = () => {
                         sortOrder={sortOrder}
                         searchQuery={searchQuery}
                         category={category}
+                        nativeFitEnabled={FIT_NATIVE_ENABLED}
                         onSortByChanged={(sortBy: SortBy) => search({ sortBy })}
                         onSortOrderChanged={(sortOrder: SortOrder) => search({ sortOrder })}
                     />

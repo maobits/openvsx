@@ -20,8 +20,6 @@ import { Extension, NamespaceDetails } from '../extension-registry-types';
 import { PageSettings } from '../page-settings';
 import { ExtensionListRoutes } from '../pages/extension-list/extension-list-routes';
 import { DefaultMenuContent, MobileMenuContent } from './menu-content';
-import { OpenVsxMark } from '../components/openvsx-mark';
-import OpenVSXLogo from './openvsx-registry-logo';
 import About from './about';
 import { createAbsoluteURL } from '../utils';
 
@@ -33,18 +31,28 @@ export default function createPageSettings(prefersDarkMode: boolean, serverUrl: 
     const toolbarContent: FunctionComponent = () => (
         <RouteLink
             to={ExtensionListRoutes.MAIN}
-            aria-label={`Home - Open VSX Registry`}
+            aria-label='BlackWhi Store home'
             // A bare anchor would leak the browser's link colors into the wordmark.
             style={{ display: 'flex', color: 'inherit' }}>
-            <OpenVSXLogo width='auto' height='2.5rem' prefersDarkMode={prefersDarkMode} />
+            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: '0.55rem' }}>
+                <Typography component='span' sx={{ fontFamily: 'Georgia, serif', fontWeight: 800,
+                    fontSize: '1.65rem', letterSpacing: '-0.06em', lineHeight: 1, color: 'inherit' }}>
+                    BlackWhi
+                </Typography>
+                <Typography component='span' sx={{ fontWeight: 700, fontSize: '0.625rem',
+                    letterSpacing: '0.18em', color: 'inherit' }}>
+                    STORE
+                </Typography>
+            </Box>
         </RouteLink>
     );
 
     const footer: PageSettings['elements']['footer'] = {
         brand: {
-            logo: <OpenVsxMark />,
-            name: 'Open VSX Registry',
-            description: 'An open-source, vendor-neutral registry for VS Code–compatible extensions.'
+            logo: <Box component='span' sx={{ fontFamily: 'Georgia, serif', fontWeight: 800,
+                letterSpacing: '-0.06em', fontSize: '1.5rem', lineHeight: 1 }}>BW</Box>,
+            name: 'BlackWhi Store',
+            description: 'FIT package catalog built on the Eclipse Open VSX open-source codebase (EPL-2.0). Upstream attribution and notices are retained.'
         },
         columns: [
             {
@@ -185,7 +193,7 @@ export default function createPageSettings(prefersDarkMode: boolean, serverUrl: 
     };
 
     return {
-        pageTitle: 'Open VSX Registry',
+        pageTitle: 'BlackWhi Store',
         themeType: prefersDarkMode ? 'dark' : 'light',
         publisherAgreement: {
             name: 'Open VSX'

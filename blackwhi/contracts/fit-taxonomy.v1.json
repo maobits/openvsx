@@ -1,0 +1,145 @@
+{
+  "contract": "blackwhi.fit.taxonomy.v1",
+  "categories": [
+    {
+      "id": "development-tools",
+      "label": "Development Tools",
+      "subcategories": [
+        {
+          "id": "software-libraries",
+          "label": "Software Libraries"
+        },
+        {
+          "id": "build-tools",
+          "label": "Build Tools"
+        },
+        {
+          "id": "developer-workflows",
+          "label": "Developer Workflows"
+        }
+      ]
+    },
+    {
+      "id": "data-analytics",
+      "label": "Data & Analytics",
+      "subcategories": [
+        {
+          "id": "data-processing",
+          "label": "Data Processing"
+        },
+        {
+          "id": "visualization",
+          "label": "Visualization"
+        }
+      ]
+    },
+    {
+      "id": "health-fitness",
+      "label": "Health & Fitness",
+      "subcategories": [
+        {
+          "id": "strength-training",
+          "label": "Strength Training"
+        },
+        {
+          "id": "training-analytics",
+          "label": "Training Analytics"
+        }
+      ]
+    },
+    {
+      "id": "education",
+      "label": "Education",
+      "subcategories": [
+        {
+          "id": "learning-tools",
+          "label": "Learning Tools"
+        },
+        {
+          "id": "classroom-tools",
+          "label": "Classroom Tools"
+        }
+      ]
+    },
+    {
+      "id": "business-productivity",
+      "label": "Business & Productivity",
+      "subcategories": [
+        {
+          "id": "workflow-productivity",
+          "label": "Workflow Productivity"
+        }
+      ]
+    },
+    {
+      "id": "science-mathematics",
+      "label": "Science & Mathematics",
+      "subcategories": [
+        {
+          "id": "mathematical-functions",
+          "label": "Mathematical Functions"
+        }
+      ]
+    },
+    {
+      "id": "media-creative",
+      "label": "Media & Creative",
+      "subcategories": [
+        {
+          "id": "image-tools",
+          "label": "Image Tools"
+        }
+      ]
+    },
+    {
+      "id": "automation",
+      "label": "Automation",
+      "subcategories": [
+        {
+          "id": "data-automation",
+          "label": "Data Automation"
+        }
+      ]
+    },
+    {
+      "id": "finance",
+      "label": "Finance",
+      "subcategories": [
+        {
+          "id": "financial-calculation",
+          "label": "Financial Calculation"
+        }
+      ]
+    },
+    {
+      "id": "connectivity",
+      "label": "Connectivity",
+      "subcategories": [
+        {
+          "id": "api-integration",
+          "label": "API Integration"
+        }
+      ]
+    },
+    {
+      "id": "utilities",
+      "label": "Utilities",
+      "subcategories": [
+        {
+          "id": "text-utilities",
+          "label": "Text Utilities"
+        }
+      ]
+    },
+    {
+      "id": "security-privacy",
+      "label": "Security & Privacy",
+      "subcategories": [
+        {
+          "id": "integrity-verification",
+          "label": "Integrity Verification"
+        }
+      ]
+    }
+  ]
+}

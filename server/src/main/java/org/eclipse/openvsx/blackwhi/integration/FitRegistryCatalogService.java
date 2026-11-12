@@ -23,6 +23,14 @@ public final class FitRegistryCatalogService {
         this.client = new FitRegistryCatalogClient(origin);
     }
 
+    public FitRegistryCatalogClient.CatalogPage page(int limit, String cursor) {
+        return client.listProductsPage(limit, cursor);
+    }
+
+    public StoreProduct exactRelease(String packageId, String version) {
+        return client.exactRelease(packageId, version);
+    }
+
     public List<StoreProduct> listPublicProducts() {
         return client.listProducts();
     }

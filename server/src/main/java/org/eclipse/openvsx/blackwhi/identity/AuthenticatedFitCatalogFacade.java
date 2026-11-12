@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.eclipse.openvsx.blackwhi.catalog.StoreProduct;
 import org.eclipse.openvsx.blackwhi.integration.FitRegistryCatalogService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +23,7 @@ public final class AuthenticatedFitCatalogFacade {
     private final FitRegistryCatalogService catalog;
     private final StoreServiceProofVerifier verifier;
 
+    @Autowired
     public AuthenticatedFitCatalogFacade(
             FitRegistryCatalogService catalog,
             @Value("${blackwhi.store.service-identity.key-id:}") String keyId,

@@ -32,6 +32,8 @@ import { ExtensionDetailRoutes } from '../pages/extension-detail/extension-detai
 import { ExtensionDetail } from '../pages/extension-detail/extension-detail';
 import { HomePage } from '../pages/home/home-page';
 import { SearchPage } from '../pages/search/search-page';
+import { FitPackageDetail } from '../pages/extension-detail/fit-package-detail';
+import { FIT_NATIVE_ENABLED } from '../blackwhi/fit/native-fit-catalog';
 import { NamespaceDetail } from '../pages/namespace-detail/namespace-detail';
 import { NotFound } from '../not-found';
 import { NAVBAR_HEIGHT } from '../default/theme';
@@ -141,6 +143,8 @@ const AppLayoutContent: FunctionComponent<AppLayoutProps> = props => {
                         />
                         <Route path={PublishRoutes.ROOT} element={<PublishPage />} />
                         <Route path={NamespaceDetailRoutes.MAIN} element={<NamespaceDetail />} />
+                        {FIT_NATIVE_ENABLED && <Route path='/fit-package/:packageId' element={<FitPackageDetail />} />}
+                        {FIT_NATIVE_ENABLED && <Route path='/fit-package/:packageId/versions/:version' element={<FitPackageDetail />} />}
                         <Route path={ExtensionDetailRoutes.MAIN} element={<ExtensionDetail />} />
                         <Route path={ExtensionDetailRoutes.MAIN_TARGET} element={<ExtensionDetail />} />
                         {AdditionalRoutes ?? null}
