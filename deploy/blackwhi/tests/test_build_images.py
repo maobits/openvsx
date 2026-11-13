@@ -37,6 +37,21 @@ class ImageBuildTests(unittest.TestCase):
         self.assertIn("try_files $uri $uri/ /index.html", contents)
         self.assertIn("${BLACKWHI_STORE_BACKEND_UPSTREAM}", contents)
 
+    def test_non_root_webui_builder_can_write_node_modules(self) -> None:
+        # COPY --chown does not change ownership of WORKDIR itself.
+        contents = (ROOT / "deploy/blackwhi/Dockerfile.webui").read_text()
+        workdir = "WORKDIR /home/node/builder"
+        copy = "COPY --chown=node:node webui/ ./"
+        fix = "RUN chown node:node /home/node/builder"
+        non_root = "USER node"
+        self.assertIn(workdir, contents)
+        self.assertIn(copy, contents)
+        self.assertIn(fix, contents)
+        self.assertIn(non_root, contents)
+        self.assertLess(contents.index(workdir), contents.index(copy))
+        self.assertLess(contents.index(copy), contents.index(fix))
+        self.assertLess(contents.index(fix), contents.index(non_root))
+
     def test_archive_uses_committed_files_not_untracked_local_files(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "source"
