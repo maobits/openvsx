@@ -1,0 +1,32 @@
+# syntax=docker/dockerfile:1
+# SPDX-License-Identifier: EPL-2.0
+# BlackWhi Store Spring Boot image built exclusively from this Git revision.
+ARG GRADLE_IMAGE=gradle:jdk-25-and-25
+ARG JAVA_IMAGE=eclipse-temurin:25-jdk
+
+FROM ${GRADLE_IMAGE} AS builder
+WORKDIR /home/gradle
+COPY --chown=gradle:gradle server/ ./
+ENV CI=true
+RUN ./gradlew --no-daemon assemble
+
+FROM ${JAVA_IMAGE} AS runtime
+ARG SOURCE_COMMIT
+LABEL org.opencontainers.image.source="https://github.com/maobits/openvsx" \
+      org.opencontainers.image.revision="${SOURCE_COMMIT}" \
+      org.opencontainers.image.licenses="EPL-2.0"
+RUN groupadd -r openvsx \
+    && useradd --no-log-init -r -g openvsx openvsx \
+    && mkdir -p /home/openvsx/server \
+    && chown -R openvsx:openvsx /home/openvsx
+COPY --from=builder --chown=openvsx:openvsx \
+    /home/gradle/build/libs/openvsx-server.jar /home/openvsx/openvsx-server.jar
+COPY --chown=openvsx:openvsx server/scripts/run-server.sh /home/openvsx/server/run-server.sh
+COPY --chown=openvsx:openvsx LICENSE NOTICE.md /home/openvsx/licenses/
+USER openvsx
+WORKDIR /home/openvsx/server
+RUN jar -xf /home/openvsx/openvsx-server.jar \
+    && rm /home/openvsx/openvsx-server.jar \
+    && chmod u+x run-server.sh
+EXPOSE 8080
+ENTRYPOINT ["./run-server.sh"]

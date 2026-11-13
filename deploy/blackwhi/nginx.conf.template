@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: EPL-2.0
+# The backend hostname must resolve on the container network.
+server {
+    listen 8080;
+    server_name _;
+    server_tokens off;
+    root /usr/share/nginx/html;
+    index index.html;
+    resolver 127.0.0.11 ipv6=off valid=30s;
+
+    location ~ ^/(api|vscode|user|admin|login-providers|login|logout)(/|$) {
+        set $store_backend "http://${BLACKWHI_STORE_BACKEND_UPSTREAM}";
+        proxy_pass $store_backend$request_uri;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_read_timeout 120s;
+    }
+
+    location ~* \.map$ {
+        return 404;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}

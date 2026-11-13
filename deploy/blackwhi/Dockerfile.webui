@@ -1,0 +1,27 @@
+# syntax=docker/dockerfile:1
+# SPDX-License-Identifier: EPL-2.0
+# BlackWhi Store native React frontend; no other storefront is introduced.
+ARG NODE_IMAGE=node:24-alpine3.22
+ARG NGINX_IMAGE=nginx:stable-alpine
+
+FROM ${NODE_IMAGE} AS builder
+WORKDIR /home/node/builder
+COPY --chown=node:node webui/ ./
+# WORKDIR is created by root: grant node access to create node_modules.
+RUN chown node:node /home/node/builder
+USER node
+RUN node .yarn/releases/yarn-4.18.1.cjs install --immutable \
+    && node .yarn/releases/yarn-4.18.1.cjs build \
+    && node .yarn/releases/yarn-4.18.1.cjs build:default
+
+FROM ${NGINX_IMAGE} AS runtime
+ARG SOURCE_COMMIT
+LABEL org.opencontainers.image.source="https://github.com/maobits/openvsx" \
+      org.opencontainers.image.revision="${SOURCE_COMMIT}" \
+      org.opencontainers.image.licenses="EPL-2.0"
+ENV BLACKWHI_STORE_BACKEND_UPSTREAM=blackwhi-store-server:8080
+COPY --from=builder /home/node/builder/dist/ /usr/share/nginx/html/
+COPY deploy/blackwhi/nginx.conf.template /etc/nginx/templates/default.conf.template
+COPY LICENSE NOTICE.md /usr/share/doc/blackwhi-store/
+RUN find /usr/share/nginx/html -type f -name '*.map' -delete
+EXPOSE 8080
