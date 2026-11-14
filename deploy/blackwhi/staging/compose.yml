@@ -61,6 +61,12 @@ services:
     volumes:
       - ./application.yml:/etc/blackwhi-staging/application.yml:ro
       - package_storage:/home/openvsx/storage
+      - type: bind
+        source: ${HOME:?HOME required}/.local/state/blackwhi-store/fit-profiles-v1
+        target: /var/lib/blackwhi-store/fit-profiles
+        read_only: true
+        bind:
+          create_host_path: false
     networks:
       - private
     healthcheck:
