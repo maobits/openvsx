@@ -1,0 +1,37 @@
+# BlackWhi Store — Elasticsearch isolated staging
+# SPDX-License-Identifier: EPL-2.0
+
+services:
+  elasticsearch:
+    image: elasticsearch:9.2.8
+    restart: unless-stopped
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      xpack.ml.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - private
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - "curl -fsS http://127.0.0.1:9200/_cluster/health >/dev/null || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 40
+      start_period: 90s
+    security_opt:
+      - no-new-privileges:true
+
+  server:
+    environment:
+      OVSX_ELASTICSEARCH_HOST: elasticsearch:9200
+      SPRING_ELASTICSEARCH_URIS: http://elasticsearch:9200
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+volumes:
+  elasticsearch_data:

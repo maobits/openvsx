@@ -7,7 +7,7 @@ import { FitStoreProduct, fetchPagedFitCatalog } from './live-catalog';
 import { SortBy, SortOrder } from '../../extension-registry-types';
 
 export const FIT_CATEGORY = 'FIT Packages' as const;
-export const FIT_NATIVE_ENABLED = import.meta.env.DEV && import.meta.env.VITE_BLACKWHI_STORE_FIT_LIVE === '1';
+export const FIT_NATIVE_ENABLED = import.meta.env.VITE_BLACKWHI_STORE_FIT_LIVE === '1';
 
 export function useNativeFitCatalog() {
     const query = useInfiniteQuery({

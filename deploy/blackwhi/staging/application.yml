@@ -1,0 +1,93 @@
+# SPDX-License-Identifier: EPL-2.0
+# Stage-only Spring Boot configuration, injected read-only into the fork image.
+server:
+  port: 8080
+  forward-headers-strategy: framework
+
+spring:
+  application:
+    name: blackwhi-store-staging
+  profiles:
+    include: ovsx
+  autoconfigure:
+    exclude: org.springframework.boot.zipkin.autoconfigure.ZipkinAutoConfiguration
+  datasource:
+    url: jdbc:postgresql://db:5432/blackwhi_store
+    username: blackwhi_store
+    password: ${BLACKWHI_STORE_DB_PASSWORD}
+  cache:
+    jcache:
+      config: classpath:ehcache.xml
+  flyway:
+    baseline-on-migrate: true
+    baseline-version: 0.1.0
+    baseline-description: JobRunr tables
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+  session:
+    store-type: jdbc
+    jdbc:
+      initialize-schema: never
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: none
+            client-secret: none
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+jobrunr:
+  job-scheduler:
+    enabled: true
+  background-job-server:
+    enabled: true
+    worker-count: 2
+  dashboard:
+    enabled: false
+  database:
+    type: sql
+  miscellaneous:
+    allow-anonymous-data-usage: false
+
+bucket4j:
+  enabled: false
+
+ovsx:
+  server:
+    url: ${BLACKWHI_STORE_PUBLIC_URL}
+  webui:
+    url: ${BLACKWHI_STORE_PUBLIC_URL}
+    additional-routes:
+      - /fit-package/**
+  publisher-agreement:
+    version: ''
+  databasesearch:
+    enabled: true
+  elasticsearch:
+    enabled: false
+  redis:
+    enabled: false
+  analytics:
+    enabled: false
+  extension-control:
+    enabled: false
+    update-on-start: false
+  integrity:
+    key-pair: create
+  registry:
+    version: blackwhi-staging
+  storage:
+    local:
+      directory: /home/openvsx/storage
