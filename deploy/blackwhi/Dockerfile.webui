@@ -13,8 +13,8 @@ COPY --chown=node:node webui/ ./
 RUN chown node:node /home/node/builder
 USER node
 RUN node .yarn/releases/yarn-4.18.1.cjs install --immutable \
-    && node .yarn/releases/yarn-4.18.1.cjs build \
-    && node .yarn/releases/yarn-4.18.1.cjs build:default
+    && BLACKWHI_STORE_SPRING_ORIGIN=http://127.0.0.1:43181 node .yarn/releases/yarn-4.18.1.cjs build \
+    && BLACKWHI_STORE_SPRING_ORIGIN=http://127.0.0.1:43181 node .yarn/releases/yarn-4.18.1.cjs build:default
 
 FROM ${NGINX_IMAGE} AS runtime
 ARG SOURCE_COMMIT
