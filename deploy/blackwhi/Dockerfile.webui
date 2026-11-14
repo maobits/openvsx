@@ -5,6 +5,8 @@ ARG NODE_IMAGE=node:24-alpine3.22
 ARG NGINX_IMAGE=nginx:stable-alpine
 
 FROM ${NODE_IMAGE} AS builder
+ARG VITE_BLACKWHI_STORE_FIT_LIVE=1
+ENV VITE_BLACKWHI_STORE_FIT_LIVE=${VITE_BLACKWHI_STORE_FIT_LIVE}
 WORKDIR /home/node/builder
 COPY --chown=node:node webui/ ./
 # WORKDIR is created by root: grant node access to create node_modules.

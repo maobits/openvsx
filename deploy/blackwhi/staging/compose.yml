@@ -1,0 +1,110 @@
+# SPDX-License-Identifier: EPL-2.0
+# BlackWhi Store native fork — local staging only (no production ingress).
+name: blackwhi-store-staging
+
+x-log-policy: &log-policy
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  db:
+    image: postgres:16.2
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: blackwhi_store
+      POSTGRES_USER: blackwhi_store
+      POSTGRES_PASSWORD: ${BLACKWHI_STORE_DB_PASSWORD:?Use the staging preparer to create a private env file}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - private
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+    security_opt:
+      - no-new-privileges:true
+    logging: *log-policy
+
+  storage-init:
+    image: blackwhi-store/server:git-${BLACKWHI_STORE_IMAGE_REVISION:?Missing image revision}
+    restart: "no"
+    user: "0:0"
+    entrypoint: ["/bin/sh", "-ec", "chown openvsx:openvsx /staging-storage"]
+    volumes:
+      - package_storage:/staging-storage
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    cap_add: [CHOWN]
+    security_opt:
+      - no-new-privileges:true
+    logging: *log-policy
+
+  server:
+    image: blackwhi-store/server:git-${BLACKWHI_STORE_IMAGE_REVISION:?Missing image revision}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      storage-init:
+        condition: service_completed_successfully
+    environment:
+      SPRING_CONFIG_ADDITIONAL_LOCATION: file:/etc/blackwhi-staging/application.yml
+      BLACKWHI_STORE_DB_PASSWORD: ${BLACKWHI_STORE_DB_PASSWORD:?Missing database password}
+      BLACKWHI_STORE_PUBLIC_URL: http://localhost:${BLACKWHI_STORE_PUBLIC_PORT:?Missing public port}
+      JVM_ARGS: "-Xms256m -Xmx1024m"
+    volumes:
+      - ./application.yml:/etc/blackwhi-staging/application.yml:ro
+      - package_storage:/home/openvsx/storage
+    networks:
+      - private
+    healthcheck:
+      test:
+        - CMD
+        - bash
+        - -c
+        - 'exec 3<>/dev/tcp/127.0.0.1/8080 && printf "GET /actuator/health HTTP/1.0\r\nHost: localhost\r\n\r\n" >&3 && grep -q ''"status":"UP"'' <&3'
+      interval: 10s
+      timeout: 8s
+      retries: 30
+      start_period: 90s
+    security_opt:
+      - no-new-privileges:true
+    logging: *log-policy
+
+  webui:
+    image: blackwhi-store/webui:git-${BLACKWHI_STORE_IMAGE_REVISION:?Missing image revision}
+    restart: unless-stopped
+    depends_on:
+      server:
+        condition: service_healthy
+    environment:
+      BLACKWHI_STORE_BACKEND_UPSTREAM: server:8080
+    ports:
+      - "127.0.0.1:${BLACKWHI_STORE_PUBLIC_PORT:?Missing public port}:8080"
+    networks:
+      - private
+      - edge
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 15s
+    security_opt:
+      - no-new-privileges:true
+    logging: *log-policy
+
+networks:
+  private:
+    internal: true
+  edge: {}
+
+volumes:
+  postgres_data:
+  package_storage:
