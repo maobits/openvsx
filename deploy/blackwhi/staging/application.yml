@@ -91,3 +91,9 @@ ovsx:
   storage:
     local:
       directory: /home/openvsx/storage
+
+# External operator-reviewed FIT-02 profiles; mounted read-only by staging.
+blackwhi:
+  store:
+    fit-profile:
+      root: /var/lib/blackwhi-store/fit-profiles
