@@ -15,6 +15,7 @@ import { PageContainer } from '../../components/page-container';
 import { TagChip, cardSurface } from '../../components/page-primitives';
 import { NotFound } from '../../not-found';
 import { FIT_NATIVE_ENABLED, useNativeFitCatalog } from '../../blackwhi/fit/native-fit-catalog';
+import { FitRegistryLegalEvidence } from '../../blackwhi/fit/registry-legal-evidence';
 import {
     fetchFitProductDetail,
     fetchFitTextResource,
@@ -535,6 +536,13 @@ const NativeFitProfile = ({
                     <Typography variant='body2' color='text.secondary' sx={{ mt: 2 }}>
                         Commercial use and redistribution rights depend on the actual license and documented terms.
                     </Typography>
+                    <FitRegistryLegalEvidence
+                        packageId={packageId}
+                        version={version}
+                        releaseSha={releaseSha}
+                        profile={profile}
+                        preview={!!preview}
+                    />
                 </Section>
             </Stack>
         </Box>
@@ -811,8 +819,8 @@ export const FitPackageDetail: FunctionComponent = () => {
                     !activePreview && (
                         <Section id='fit-registry' title='Registry information'>
                             <Typography sx={{ mb: 2 }}>
-                                The release is published, but its professional FIT-01 profile has not been supplied. No
-                                license, documentation, ratings, image, or review status has been invented.
+                                This release has no professional FIT-01 profile. No editorial metadata, ratings or
+                                imagery has been invented. Reviewed Registry legal evidence, if available, appears below.
                             </Typography>
                             <DetailRows
                                 entries={[
@@ -825,6 +833,15 @@ export const FitPackageDetail: FunctionComponent = () => {
                             />
                         </Section>
                     )}
+                {responseMatchesRegistry && details.data?.profileStatus === 'not-provided' && !activePreview && (
+                    <Section id='fit-business' title='Business model & licensing'>
+                        <FitRegistryLegalEvidence
+                            packageId={packageId}
+                            version={selectedVersion}
+                            releaseSha={release.sha256}
+                        />
+                    </Section>
+                )}
                 {profile && (
                     <NativeFitProfile
                         profile={profile}
